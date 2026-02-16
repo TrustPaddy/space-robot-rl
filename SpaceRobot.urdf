@@ -1,0 +1,172 @@
+<?xml version="1.0"?>
+<robot name="floating_arm">
+
+  <!-- zentraler Körper -->
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0 0 0" />
+      <mass value="65.0" />
+      <inertia ixx="8" iyy="8" izz="8"
+               ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" />
+      <geometry>
+        <box size="1.0 1.0 1.0" />
+      </geometry>
+      <material name="blue">
+        <color rgba="0.2 0.2 0.8 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" />
+      <geometry>
+        <box size="1.0 1.0 1.0" />
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- erster Arm-Abschnitt -->
+  <link name="link1">
+    <inertial>
+      <origin xyz="0.5 0 0" />
+      <mass value="1.0" />
+      <inertia ixx="0.1" iyy="0.1" izz="0.01"
+               ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual>
+      <origin xyz="0.5 0 0" rpy="0 1.5708 0"/>
+      <geometry>
+        <cylinder radius="0.05" length="1.0" />
+      </geometry>
+      <material name="gray1">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <collision>
+        <origin xyz="0.5 0 0" rpy="0 1.5708 0"/>
+        <geometry>
+          <cylinder radius="0.05" length="1.0" />
+        </geometry>
+      </collision>
+  </link>
+
+  <joint name="joint1" type="continuous">
+    <parent link="base_link" />
+    <child link="link1" />
+    <origin xyz="0.5 0 0" />
+    <axis xyz="0 0 1" />
+  </joint>
+
+  <!-- zweiter Arm-Abschnitt -->
+  <link name="link2">
+    <inertial>
+      <origin xyz="0.5 0 0" />
+      <mass value="1.0" />
+      <inertia ixx="0.1" iyy="0.1" izz="0.01"
+               ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual>
+      <origin xyz="0.5 0 0" rpy="0 1.5708 0"/>
+      <geometry>
+        <cylinder radius="0.05" length="1.0" />
+      </geometry>
+      <material name="gray2">
+        <color rgba="0.6 0.6 0.6 1" />
+      </material>
+    </visual>
+    <collision>
+        <origin xyz="0.5 0 0" rpy="0 1.5708 0"/>
+        <geometry>
+          <cylinder radius="0.05" length="1.0" />
+        </geometry>
+      </collision>
+  </link>
+
+  <joint name="joint2" type="continuous">
+    <parent link="link1" />
+    <child link="link2" />
+    <origin xyz="1.0 0 0" />
+    <axis xyz="0 0 1" />
+  </joint>
+
+  <!-- dritter Arm-Abschnitt -->
+  <link name="link3">
+    <inertial>
+      <origin xyz="0.5 0 0" />
+      <mass value="1.0" />
+      <inertia ixx="0.1" iyy="0.1" izz="0.01"
+               ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual>
+      <origin xyz="0.5 0 0" rpy="0 1.5708 0"/>
+      <geometry>
+        <cylinder radius="0.05" length="1.0" />
+      </geometry>
+      <material name="gray3">
+        <color rgba="0.7 0.7 0.7 1" />
+      </material>
+    </visual>
+    <collision>
+        <origin xyz="0.5 0 0" rpy="0 1.5708 0"/>
+        <geometry>
+          <cylinder radius="0.05" length="1.0" />
+        </geometry>
+      </collision>
+  </link>
+
+  <joint name="joint3" type="continuous">
+    <parent link="link2" />
+    <child link="link3" />
+    <origin xyz="1.0 0 0" />
+    <axis xyz="0 0 1" />
+  </joint>
+
+  <!-- vierter Arm-Abschnitt -->
+  <link name="link4">
+    <inertial>
+      <origin xyz="0.5 0 0" />
+      <mass value="1.0" />
+      <inertia ixx="0.1" iyy="0.1" izz="0.01"
+               ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual>
+      <origin xyz="0.5 0 0" rpy="0 1.5708 0"/>
+      <geometry>
+        <cylinder radius="0.05" length="1.0" />
+      </geometry>
+      <material name="gray4">
+        <color rgba="0.8 0.8 0.8 1" />
+      </material>
+    </visual>
+    <collision>
+        <origin xyz="0.5 0 0" rpy="0 1.5708 0"/>
+        <geometry>
+          <cylinder radius="0.05" length="1.0" />
+        </geometry>
+      </collision>
+  </link>
+
+  <joint name="joint4" type="continuous">
+    <parent link="link3" />
+    <child link="link4" />
+    <origin xyz="1.0 0 0" />
+    <axis xyz="0 0 1" />
+  </joint>
+    
+  <!-- EE-Abschnitt -->
+    <link name="ee_link">
+      <inertial>
+        <origin xyz="0 0 0"/>
+        <mass value="0.1"/>
+          <inertia ixx="0.001" iyy="0.001" izz="0.001"
+           ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+    </link>
+    <joint name="ee_fixed" type="fixed">
+      <parent link="link4"/>
+      <child link="ee_link"/>
+      <origin xyz="1.0 0 0" rpy="0 0 0"/> 
+    </joint>
+
+</robot>
