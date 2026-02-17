@@ -8,6 +8,9 @@
 
 This project investigates the use of continuous-action deep reinforcement learning (RL) to control a free-floating space robot manipulator. A 4-DOF robotic arm mounted on an unactuated spacecraft base must track a desired end-effector trajectory while minimizing base attitude disturbance — a fundamental challenge in on-orbit servicing caused by the dynamic coupling between manipulator motion and base reaction (conservation of angular momentum).
 
+![Result video](Figures/result_of_rl_controlled_space_robot.gif)
+*Result of the optimized PPO agent controlling the free-floating space robot. The animation displays the robot's configuration during circular trajectory tracking, with superimposed reference (desired) and actual end-effector paths.*
+
 Six state-of-the-art RL algorithms are benchmarked under unified conditions:
 
 | Algorithm | Type | Policy |
@@ -44,6 +47,12 @@ Reinforcement learning offers a trial-and-error approach that can learn control 
 ### Robot Model
 
 The robot consists of a cuboid spacecraft base with a 4-DOF serial manipulator arm. The kinematic and inertial properties are defined in a URDF file (`SpaceRobot.urdf`) and imported into Simulink's Simscape Multibody environment. The base is connected to the world frame through an unactuated 6-DOF joint, allowing free translation and rotation. Gravity is set to zero to emulate the orbital microgravity environment.
+
+<p align="center">
+  <img src="Figures/Spacerobot_slx.png" alt="Simulink Model Overview" width="90%"/>
+  <br/>
+  <em>Overview of the Simulink closed-loop simulation framework integrating robot dynamics, RL agent, reward computation, and safety monitoring.</em>
+</p>
 
 ### Observation Space (23 dimensions)
 
@@ -117,6 +126,24 @@ PPO achieves the best tracking accuracy (K2), base stability (K4), smoothest con
 
 The optimized PPO also generalizes to piecewise-linear (ramp) trajectories, reducing base disturbance by 44% and energy consumption by 35% compared to the default configuration.
 
+#### End-Effector Trajectory: Default vs. Optimized PPO
+
+<p align="center">
+  <img src="Figures/soll_vs_ist_kreisbahn.png" alt="Trajectory Default PPO" width="48%"/>
+  <img src="Figures/soll_vs_ist_kreisbahn_opt.png" alt="Trajectory Optimized PPO" width="48%"/>
+  <br/>
+  <em>Left: Default PPO — significant deviation and oscillations. Right: Optimized PPO — closely follows the reference circle.</em>
+</p>
+
+#### Training Curves: Default vs. Optimized PPO
+
+<p align="center">
+  <img src="Figures/trainingsverlauf_ppo_default.png" alt="Training Default PPO" width="48%"/>
+  <img src="Figures/trainingsverlauf_ppo_optimized.png" alt="Training Optimized PPO" width="48%"/>
+  <br/>
+  <em>Left: Default PPO — plateaus early with high variance. Right: Optimized PPO — faster convergence and higher reward.</em>
+</p>
+
 ## Project Structure
 
 ```
@@ -166,10 +193,10 @@ space-robot-rl/
 
 1. Open MATLAB and navigate to the project directory
 2. Run any training script, e.g.:
-   ```matlab
-   SpaceRobotDynamic_ppo
-   ```
-3. The script will:
+```matlab
+SpaceRobotDynamic_ppo
+```
+The script will
    - Load the robot model (`SpaceRobot.urdf`)
    - Open the Simulink environment (`SpaceRobot.slx`)
    - Configure the RL agent and train for 1000 episodes
@@ -208,10 +235,3 @@ If you use this work in your research, please cite:
   publisher={IEEE}
 }
 ```
-
-## Author
-
-**Patrick S. Ermisch**
-Department of Computer Science & Engineering, Frankfurt University of Applied Sciences, Germany
-
-
