@@ -184,10 +184,13 @@ space-robot-rl/
 
 ### Requirements
 
-- **MATLAB R2025b** (or compatible version)
-- **Simulink** with **Simscape Multibody**
-- **Reinforcement Learning Toolbox**
-- **Simulink Design Verifier** (for formal verification only)
+| Toolbox | Required | Notes |
+|---------|:--------:|-------|
+| MATLAB | R2025b or later | Core environment |
+| Simulink | R2025b or later | Simulation framework |
+| Simscape Multibody | R2025b or later | Physics-based robot dynamics |
+| Reinforcement Learning Toolbox | R2025b or later | RL agent creation, training, and evaluation |
+| Simulink Design Verifier | R2025b or later | Formal torque verification only (optional) |
 
 ### Training an Agent
 
@@ -201,6 +204,18 @@ The script will
    - Open the Simulink environment (`SpaceRobot.slx`)
    - Configure the RL agent and train for 1000 episodes
    - Save the trained agent to a `.mat` file
+
+### Using a Pre-Trained Agent
+
+All pre-trained agents are stored as `.mat` files and can be loaded directly in MATLAB:
+
+```matlab
+% Load the optimized PPO agent
+agent = load('SpaceRobot_PPO_agent_optimized.mat').agent;
+
+% Simulate the agent in the Simulink environment
+simOut = sim('SpaceRobot');
+```
 
 ### Evaluating a Trained Agent
 
@@ -235,3 +250,14 @@ If you use this work in your research, please cite:
   publisher={IEEE}
 }
 ```
+
+## Author
+
+**Patrick S. Ermisch**
+Department of Computer Science & Engineering, Frankfurt University of Applied Sciences, Germany
+
+## License
+
+[![License: CC BY-ND 4.0](https://img.shields.io/badge/License-CC%20BY--ND%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nd/4.0/)
+
+This work is licensed under a [Creative Commons Attribution-NoDerivatives 4.0 International License](https://creativecommons.org/licenses/by-nd/4.0/). You are free to share and use this project (including commercially), but you may not distribute modified versions. Attribution is required.
