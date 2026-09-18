@@ -4,6 +4,7 @@ function cfg = benchmarkConfig(varargin)
 %   cfg = benchmarkConfig()                          % Nominalkonfiguration
 %   cfg = benchmarkConfig('traj',"linear", 'reward.wori',400)
 %   cfg = benchmarkConfig(overrides)                 % Struct, auch verschachtelt
+%   cfg = benchmarkConfig(trainCfg, overrides)       % mehrere Structs, der Reihe nach
 %
 %   JEDE Zahl, die ein Experiment beeinflusst, steht hier - nicht fest im
 %   Simulink-Modell und nicht verstreut in Einzelskripten. setupSpaceRobotEnv
@@ -55,11 +56,14 @@ function cfg = benchmarkConfig(varargin)
     cfg.reward.sigma = 0.02;   % Breite Proximity-Bonus [m]
     cfg.reward.C     = 500;    % Normierung
     cfg.reward.rfail = -1;     % Terminal-Strafe
+    cfg.reward.fail_remaining = 0;   % 1 -> rfail fuer jeden verbleibenden Schritt
     cfg.reward.dmax  = 10;     % Abbruch, wenn EE-Fehler > dmax [m]
 
-    % ---- Startzustand ----
+    % ---- Startzustand (Training) ----
+    % Jede Trainingsepisode startet in q0 + U(-range, +range) je Gelenk. Die
+    % Auswertung setzt ihre Startzustaende selbst (evaluateAgent).
     cfg.init.q0        = zeros(4,1);   % nominale Startpose [rad] (gestreckter Arm)
-    cfg.init.randomize = false;        % true -> q0 + U(-range, +range) je Gelenk
+    cfg.init.randomize = true;
     cfg.init.range_deg = 1.0;          % halbe Breite der Gleichverteilung [deg]
 
     % ---- Training ----
@@ -69,8 +73,10 @@ function cfg = benchmarkConfig(varargin)
     cfg.mdl = 'SpaceRobot';
 
     % ---- Ueberschreibungen anwenden ----
-    if nargin == 1 && isstruct(varargin{1})
-        cfg = mergeStruct(cfg, varargin{1});
+    if nargin > 0 && all(cellfun(@isstruct, varargin))
+        for k = 1:nargin                     % mehrere Structs: der Reihe nach
+            cfg = mergeStruct(cfg, varargin{k});
+        end
     elseif nargin > 0
         if mod(nargin, 2) ~= 0
             error('benchmarkConfig:args', 'Erwartet Name-Wert-Paare oder ein Struct.');

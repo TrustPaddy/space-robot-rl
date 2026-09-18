@@ -13,6 +13,7 @@ function parametrizeSpaceRobotModel(mdl)
 %     q0, dq0    Positions-/Geschwindigkeits-Targets der vier Gelenke
 %     tau_sat    Saturation vor der Strecke
 %     rewardW.*  Gewichte und Konstanten im Reward-Block (Parameter-Daten)
+%     q_lim      Gelenkgrenzen [rad] (4x2) fuer den Episodenabbruch
 
     if nargin < 1, mdl = 'SpaceRobot'; end
     load_system(mdl);
@@ -44,13 +45,15 @@ function parametrizeSpaceRobotModel(mdl)
     set_param([mdl '/Saturation'], 'UpperLimit', 'tau_sat', 'LowerLimit', '-tau_sat');
 
     % ---- 4) Reward-Funktion ----
+    % Stateflow gleicht beim Setzen des Codes die Daten nach POSITION ab (z. B.
+    % wurde rewardW zu einem Parameter "isColl"). Deshalb danach Namen, Scope
+    % und Portreihenfolge ausdruecklich auf den Sollzustand bringen.
     ch = findRewardChart(mdl);
     ch.Script = rewardScript();
-    if isempty(ch.find('-isa', 'Stateflow.Data', 'Name', 'rewardW'))
-        d = Stateflow.Data(ch);
-        d.Name  = 'rewardW';
-        d.Scope = 'Parameter';
-    end
+    reconcileData(ch, ...
+        {'ep','ev','vbase','wbase','tau','tauPrev','e_ori','isColl','q'}, ...
+        {'reward','isDone'}, ...
+        {'rewardW','q_lim'});
 
     % ---- 5) Gelenkreihenfolge in q und dq ----
     % Die Mux-Bloecke fuer q ('Mux') und dq ('Mux1') waren in umgekehrter
@@ -60,6 +63,13 @@ function parametrizeSpaceRobotModel(mdl)
     % dq_(5-i). Danach gilt q = [q1 q2 q3 q4], dq = [dq1 dq2 dq3 dq4].
     orderMuxByJoint([mdl '/Robot'], 'Mux');
     orderMuxByJoint([mdl '/Robot'], 'Mux1');
+
+    % ---- 6) Episodenabbruch bei Kollision oder Gelenkgrenze ----
+    % Vorher setzte eine Kollision nur die Momente auf null, und es gab keinen
+    % Abbruch bei Gelenkgrenzen. Jetzt bekommt der Reward-Block isColl
+    % (Kollisionsmonitor) und q (Robot) und beendet die Episode mit rfail.
+    addRewardInput(mdl, 'isColl', 'collision monitor/1');
+    addRewardInput(mdl, 'q',      'Robot/1');
 
     save_system(mdl);
     fprintf('[parametrizeSpaceRobotModel] %s migriert und gespeichert.\n', mdl);
@@ -107,6 +117,63 @@ function idx = jointOfConverter(conv)
     error('parametrizeSpaceRobotModel:mux', 'Kein Joint an %s gefunden.', conv);
 end
 
+function reconcileData(ch, inputs, outputs, params)
+% Bringt die Stateflow-Daten der Funktion auf genau diese Liste: Eingaenge und
+% Ausgaenge in der angegebenen Portreihenfolge, dazu die Parameter. Nicht
+% erwartete Daten werden geloescht.
+    expected = [inputs, outputs, params];
+    for x = ch.find('-isa', 'Stateflow.Data')'
+        if ~ismember(x.Name, expected), delete(x); end
+    end
+    setGroup(ch, inputs,  'Input',     true);
+    setGroup(ch, outputs, 'Output',    true);
+    setGroup(ch, params,  'Parameter', false);
+end
+
+function setGroup(ch, names, scope, withPort)
+    for k = 1:numel(names)
+        d = ch.find('-isa', 'Stateflow.Data', 'Name', names{k});
+        if isempty(d)
+            d = Stateflow.Data(ch);
+            d.Name = names{k};
+        end
+        if ~strcmp(d.Scope, scope), d.Scope = scope; end
+        if withPort && d.Port ~= k, d.Port = k; end
+    end
+end
+
+function addRewardInput(mdl, name, topSrc)
+% Legt im Reward-Subsystem einen Eingang 'name' an (Inport -> Rate Transition
+% auf Ts_agent -> gleichnamiger Eingang der MATLAB Function) und verbindet
+% ihn auf oberster Ebene mit topSrc ('Block/Port').
+    rw = [mdl '/Reward'];
+    if ~isempty(find_system(rw, 'SearchDepth', 1, 'BlockType', 'Inport', 'Name', name))
+        return;                                   % bereits vorhanden
+    end
+    ref = get_param([rw '/ori_base'], 'Position');
+    nIn = numel(find_system(rw, 'SearchDepth', 1, 'BlockType', 'Inport'));
+    dy  = 40 * (nIn - 6);
+    inBlk = add_block('simulink/Sources/In1', [rw '/' name], ...
+        'Position', ref + [0 dy 0 dy]);
+    rtName = sprintf('Rate Transition %s', name);
+    rtRef  = get_param([rw '/Rate Transition7'], 'Position');
+    add_block([rw '/Rate Transition7'], [rw '/' rtName], ...
+        'Position', rtRef + [0 dy 0 dy]);
+    fcnPort = fcnInputIndex(mdl, name);
+    add_line(rw, [get_param(inBlk, 'Name') '/1'], [rtName '/1'], 'autorouting', 'on');
+    add_line(rw, [rtName '/1'], sprintf('MATLAB Function/%d', fcnPort), 'autorouting', 'on');
+    add_line(mdl, topSrc, sprintf('Reward/%s', get_param(inBlk, 'Port')), 'autorouting', 'on');
+end
+
+function idx = fcnInputIndex(mdl, name)
+% Portnummer des Eingangs 'name' der Reward-Funktion (aus ihren Stateflow-Daten).
+    d = findRewardChart(mdl).find('-isa', 'Stateflow.Data', 'Name', name);
+    if numel(d) ~= 1 || ~strcmp(d.Scope, 'Input')
+        error('parametrizeSpaceRobotModel:reward', 'Eingang "%s" der Reward-Funktion nicht gefunden.', name);
+    end
+    idx = d.Port;
+end
+
 function trySet(blk, name, value)
     try
         set_param(blk, name, value);
@@ -129,14 +196,27 @@ end
 function s = rewardScript()
 % Gleiche Berechnung wie bisher (Gl. 1-4 im Paper), Werte aus rewardW statt fest.
     L = {
-    'function [reward,isDone] = rewardFcn(ep, ev, vbase, wbase, tau, tauPrev, e_ori)'
+    'function [reward,isDone] = rewardFcn(ep, ev, vbase, wbase, tau, tauPrev, e_ori, isColl, q)'
     '    % Gewichte und Konstanten: Parameter rewardW (benchmarkConfig.reward, Tab. 3)'
-    '    persistent prev_dist;'
+    '    % Gelenkgrenzen: Parameter q_lim [rad], Zeile j = [min max] von Gelenk j'
+    '    persistent prev_dist k;'
     '    if isempty(prev_dist), prev_dist = inf; end'
+    '    if isempty(k), k = 0; end'
+    '    k = k + 1;                                   % Aufruf-Zaehler (1 je Agentenschritt)'
+    ''
+    '    % Terminalstrafe: rfail, bei fail_remaining = 1 fuer jeden verbleibenden'
+    '    % Schritt (sonst lohnt sich ein frueher Abbruch bei negativen Rewards)'
+    '    rfailTot = rewardW.rfail * (1 + rewardW.fail_remaining * max(0, rewardW.N - k));'
     ''
     '    % --- Fruehcheck auf Finite ---'
     '    if any(~isfinite([ep;ev;vbase;wbase;e_ori;tau;tauPrev]))'
-    '        reward = rewardW.rfail; isDone = true; prev_dist = inf; return;'
+    '        reward = rfailTot; isDone = true; prev_dist = inf; return;'
+    '    end'
+    ''
+    '    % --- Sicherheitsverletzung: Kollision oder Gelenkgrenze -> Abbruch ---'
+    '    qc = q(:);'
+    '    if isColl || any(qc < q_lim(:,1)) || any(qc > q_lim(:,2))'
+    '        reward = rfailTot; isDone = true; prev_dist = inf; return;'
     '    end'
     ''
     '    % ---- Fortschritt ----'
@@ -167,7 +247,7 @@ function s = rewardScript()
     '    % Abbruch'
     '    isDone = false;'
     '    if isnan(reward) || dist > rewardW.dmax'
-    '        isDone = true; reward = rewardW.rfail; prev_dist = inf;'
+    '        isDone = true; reward = rfailTot; prev_dist = inf;'
     '    end'
     'end'
     };

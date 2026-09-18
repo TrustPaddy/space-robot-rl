@@ -16,7 +16,8 @@ function S = setupSpaceRobotEnv(cfg)
 %     robot_rbt, d_safe            Kollisionsmonitor
 %     tau_sat                      Saturation vor der Strecke
 %     robotP                       Massen, Traegheiten, Gelenkdaempfung
-%     rewardW                      Reward-Gewichte (Parameter des MATLAB-Function-Blocks)
+%     rewardW, q_lim               Reward-Gewichte und Gelenkgrenzen (Parameter
+%                                  des Reward-Blocks; Abbruch bei Verletzung)
 %     q0, dq0                      Gelenk-Startzustand (von der ResetFcn je Episode gesetzt)
 %
 %   Rueckgabe S mit Feldern:
@@ -38,6 +39,8 @@ function S = setupSpaceRobotEnv(cfg)
     assignin('base','dt_agent',0.05);                       % Legacy
     assignin('base','q1_lim',  deg2rad(cfg.q1_lim_deg));
     assignin('base','qi_lim',  deg2rad(cfg.qi_lim_deg));
+    % Gelenkgrenzen fuer den Episodenabbruch im Reward-Block (4x2, [min max])
+    assignin('base','q_lim',   deg2rad([cfg.q1_lim_deg; repmat(cfg.qi_lim_deg, 3, 1)]));
 
     % Schrittzeiten MUESSEN im Base-Workspace liegen: die Simulink-Bloecke
     % 'Rate Transition'/'Rate Transition1'/'collision monitor/Rate Transition'
@@ -56,7 +59,9 @@ function S = setupSpaceRobotEnv(cfg)
         'I_link',        s * cfg.robot.I_link, ...
         'joint_damping', s * cfg.robot.joint_damping);
     assignin('base','robotP',robotP);
-    assignin('base','rewardW',cfg.reward);
+    rewardW   = cfg.reward;
+    rewardW.N = floor(T/Ts_agent);          % Agentenschritte je Episode (Horizont der Terminalstrafe)
+    assignin('base','rewardW',rewardW);
 
     % ---- Startzustand (ResetFcn ueberschreibt q0 je Episode) ----
     assignin('base','q0',      cfg.init.q0(:));
