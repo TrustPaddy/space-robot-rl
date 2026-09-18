@@ -1,0 +1,58 @@
+# =====================================================================
+#  Persoenliche Dateien - NIEMALS ins (oeffentliche) Repo
+# =====================================================================
+_personal/
+
+# =====================================================================
+#  MATLAB / Simulink generierte Artefakte (regenerierbar)
+# =====================================================================
+slprj/
+sldv_output/
+codegen/
+*.slxc
+*.asv
+*.autosave
+*.mex*
+*_UnitCheck.xlsx
+
+# Automatische Sicherungskopien, die Simulink beim Speichern in einem
+# neueren Release anlegt (z. B. SpaceRobot.slx.r2025b)
+*.slx.r20*
+*.mdl.r20*
+
+# Manuelle Modell-Backups: Versionsstaende gehoeren ab jetzt in Git
+backup/
+
+# =====================================================================
+#  Ergebnisse
+# =====================================================================
+# Agenten, die Trainingsskripte direkt im Projekt-Root ablegen
+# (z. B. SpaceRobot_PPO_agent.mat) -> Ergebnisse gehoeren nach results/
+/*.mat
+
+# Neue Messkampagnen (Benchmark v2):
+#   results/<kampagne>/agents/  -> versioniert (klein, fuer Reproduzierbarkeit)
+#   results/<kampagne>/*.csv    -> versioniert (KPI-Tabellen fuer das Paper)
+#   results/<kampagne>/logs/    -> NICHT versioniert (grosse Simulations-Logs)
+results/**/logs/
+results/**/logsouts*.mat
+
+# Ausgabeordner von src/kpi/calculate_kpi_statistik.m (enthaelt logsouts)
+EvaluationResults/
+
+# Grosse Zwischenstaende der Bayes-Optimierung (bis 55 MB pro Datei);
+# bestAgent.mat, report.txt und *.log bleiben versioniert
+SavedAgents/**/bo_state.mat
+SavedAgents/**/results.mat
+
+# Videos (zu gross fuer Git; bei Bedarf extern ablegen)
+Figures/videos/
+
+# =====================================================================
+#  Betriebssystem / Editor
+# =====================================================================
+Thumbs.db
+desktop.ini
+.DS_Store
+~$*
+.claude/settings.local.json

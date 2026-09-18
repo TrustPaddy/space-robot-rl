@@ -1,0 +1,276 @@
+==== 08-Jul-2026 19:57:38 | agent=PG | worker=7 ====
+params: actorLR=3.74581e-05, criticLR=0.000168031, EntropyLossWeight=0.00013346, DiscountFactor=0.998718
+Error using rl.internal.train.ACGradTrainer/run_internal_/nestedRunEpisode (line 169)
+Simulation aborted
+
+Error in rl.internal.train.ACGradTrainer/run_internal_ (line 290)
+                            out = nestedRunEpisode(policy);
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.train.ACGradTrainer/run_ (line 35)
+            result = run_internal_(this);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.train.Trainer/run (line 8)
+            result = run_(this);
+            ^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.OnlineTrainingManager/run_ (line 158)
+            trainResult = run(trainer);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.TrainingManager/run (line 4)
+            result = run_(this);
+            ^^^^^^^^^^^^^^^^^^^^
+Error in rl.agent.AbstractAgent/internalTrain (line 201)
+            trainingResult = run(tm);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.agent.AbstractAgent/train (line 67)
+    trainingResult = internalTrain(this,env,trainOptsOrResult, ...
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in trainAndEvaluate (line 70)
+            result = train(agent, S.env, trainOpts, Evaluator = evl);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in optimizeAgent>@(p)trainAndEvaluate(p,agentType,envSrc,opt) (line 83)
+        @(p) trainAndEvaluate(p, agentType, envSrc, opt), ...
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in bayesoptim.callObjFcnParallel>callObjNormallyParallel (line 51)
+            [Objective, ConstraintViolations, UserData] = ObjectiveFcn(conditionalizedX);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in bayesoptim.callObjFcnParallel (line 12)
+        = callObjNormallyParallel(ObjectiveFcn, ObjectiveNargout, NumCoupledConstraints, conditionalizedX);
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+==== 08-Jul-2026 19:57:38 | agent=PG | worker=8 ====
+params: actorLR=0.000840316, criticLR=0.00108297, EntropyLossWeight=0.00170125, DiscountFactor=0.998211
+Error using rl.internal.train.ACGradTrainer/run_internal_/nestedRunEpisode (line 169)
+Simulation aborted
+
+Error in rl.internal.train.ACGradTrainer/run_internal_ (line 290)
+                            out = nestedRunEpisode(policy);
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.train.ACGradTrainer/run_ (line 35)
+            result = run_internal_(this);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.train.Trainer/run (line 8)
+            result = run_(this);
+            ^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.OnlineTrainingManager/run_ (line 158)
+            trainResult = run(trainer);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.TrainingManager/run (line 4)
+            result = run_(this);
+            ^^^^^^^^^^^^^^^^^^^^
+Error in rl.agent.AbstractAgent/internalTrain (line 201)
+            trainingResult = run(tm);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.agent.AbstractAgent/train (line 67)
+    trainingResult = internalTrain(this,env,trainOptsOrResult, ...
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in trainAndEvaluate (line 70)
+            result = train(agent, S.env, trainOpts, Evaluator = evl);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in optimizeAgent>@(p)trainAndEvaluate(p,agentType,envSrc,opt) (line 83)
+        @(p) trainAndEvaluate(p, agentType, envSrc, opt), ...
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in bayesoptim.callObjFcnParallel>callObjNormallyParallel (line 51)
+            [Objective, ConstraintViolations, UserData] = ObjectiveFcn(conditionalizedX);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in bayesoptim.callObjFcnParallel (line 12)
+        = callObjNormallyParallel(ObjectiveFcn, ObjectiveNargout, NumCoupledConstraints, conditionalizedX);
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+==== 08-Jul-2026 19:57:38 | agent=PG | worker=3 ====
+params: actorLR=0.000167767, criticLR=1.13385e-05, EntropyLossWeight=0.0497188, DiscountFactor=0.990503
+Error using rl.evaluation.rlEvaluator/evaluate_ (line 103)
+Simulation aborted
+
+Error in rl.evaluation.AbstractEvaluator/evaluate (line 44)
+            [statistic, episodeScores, evaluationData] = evaluate_(this, agent, env, info);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.evaluation.AbstractEvaluator/evaluateInTraining (line 109)
+                [statistic, episodeScores, evaluationData] = evaluate(this, agent, env, trainingEpisodeInfo);
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.context.OnlineTrainingContext/runEvaluator_ (line 431)
+                [estat, escore, evalData] = evaluateInTraining( ...
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.context.OnlineTrainingContext/update_ (line 223)
+            [epinfo, evalData] = runEvaluator_(this, episodeCount, epinfo);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.context.TrainingContext/update (line 9)
+            info = update_(this,data);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.context.OnlineTrainingContext/postSimUpdate (line 188)
+            info = update(this,out);
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.train.ACGradTrainer/run_internal_/nestedEpisodesFinished (line 195)
+                    info = postSimUpdate(context,out_,use_parallel);
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.train.ACGradTrainer/run_internal_ (line 292)
+                            nestedEpisodesFinished(out);
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.train.ACGradTrainer/run_ (line 35)
+            result = run_internal_(this);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.train.Trainer/run (line 8)
+            result = run_(this);
+            ^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.OnlineTrainingManager/run_ (line 158)
+            trainResult = run(trainer);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.TrainingManager/run (line 4)
+            result = run_(this);
+            ^^^^^^^^^^^^^^^^^^^^
+Error in rl.agent.AbstractAgent/internalTrain (line 201)
+            trainingResult = run(tm);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.agent.AbstractAgent/train (line 67)
+    trainingResult = internalTrain(this,env,trainOptsOrResult, ...
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in trainAndEvaluate (line 70)
+            result = train(agent, S.env, trainOpts, Evaluator = evl);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in optimizeAgent>@(p)trainAndEvaluate(p,agentType,envSrc,opt) (line 83)
+        @(p) trainAndEvaluate(p, agentType, envSrc, opt), ...
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in bayesoptim.callObjFcnParallel>callObjNormallyParallel (line 51)
+            [Objective, ConstraintViolations, UserData] = ObjectiveFcn(conditionalizedX);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in bayesoptim.callObjFcnParallel (line 12)
+        = callObjNormallyParallel(ObjectiveFcn, ObjectiveNargout, NumCoupledConstraints, conditionalizedX);
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+==== 08-Jul-2026 19:57:38 | agent=PG | worker=2 ====
+==== 08-Jul-2026 19:57:38 | agent=PG | worker=4 ====
+params: actorLR=2.81997e-05, criticLR=5.59853e-05, EntropyLossWeight=0.00792592, DiscountFactor=0.950078
+Error using rl.internal.train.ACGradTrainer/run_internal_/nestedRunEpisode (line 169)
+Simulation aborted
+
+Error in rl.internal.train.ACGradTrainer/run_internal_ (line 290)
+                            out = nestedRunEpisode(policy);
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.train.ACGradTrainer/run_ (line 35)
+            result = run_internal_(this);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.train.Trainer/run (line 8)
+            result = run_(this);
+            ^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.OnlineTrainingManager/run_ (line 158)
+            trainResult = run(trainer);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.TrainingManager/run (line 4)
+            result = run_(this);
+            ^^^^^^^^^^^^^^^^^^^^
+Error in rl.agent.AbstractAgent/internalTrain (line 201)
+            trainingResult = run(tm);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.agent.AbstractAgent/train (line 67)
+    trainingResult = internalTrain(this,env,trainOptsOrResult, ...
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in trainAndEvaluate (line 70)
+            result = train(agent, S.env, trainOpts, Evaluator = evl);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in optimizeAgent>@(p)trainAndEvaluate(p,agentType,envSrc,opt) (line 83)
+        @(p) trainAndEvaluate(p, agentType, envSrc, opt), ...
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in bayesoptim.callObjFcnParallel>callObjNormallyParallel (line 51)
+            [Objective, ConstraintViolations, UserData] = ObjectiveFcn(conditionalizedX);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in bayesoptim.callObjFcnParallel (line 12)
+        = callObjNormallyParallel(ObjectiveFcn, ObjectiveNargout, NumCoupledConstraints, conditionalizedX);
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+params: actorLR=0.00221829, criticLR=5.33663e-05, EntropyLossWeight=0.0167819, DiscountFactor=0.950079
+Error using rl.evaluation.rlEvaluator/evaluate_ (line 103)
+Simulation aborted
+
+Error in rl.evaluation.AbstractEvaluator/evaluate (line 44)
+            [statistic, episodeScores, evaluationData] = evaluate_(this, agent, env, info);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.evaluation.AbstractEvaluator/evaluateInTraining (line 109)
+                [statistic, episodeScores, evaluationData] = evaluate(this, agent, env, trainingEpisodeInfo);
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.context.OnlineTrainingContext/runEvaluator_ (line 431)
+                [estat, escore, evalData] = evaluateInTraining( ...
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.context.OnlineTrainingContext/update_ (line 223)
+            [epinfo, evalData] = runEvaluator_(this, episodeCount, epinfo);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.context.TrainingContext/update (line 9)
+            info = update_(this,data);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.context.OnlineTrainingContext/postSimUpdate (line 188)
+            info = update(this,out);
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.train.ACGradTrainer/run_internal_/nestedEpisodesFinished (line 195)
+                    info = postSimUpdate(context,out_,use_parallel);
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.train.ACGradTrainer/run_internal_ (line 292)
+                            nestedEpisodesFinished(out);
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.train.ACGradTrainer/run_ (line 35)
+            result = run_internal_(this);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.train.Trainer/run (line 8)
+            result = run_(this);
+            ^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.OnlineTrainingManager/run_ (line 158)
+            trainResult = run(trainer);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.TrainingManager/run (line 4)
+            result = run_(this);
+            ^^^^^^^^^^^^^^^^^^^^
+Error in rl.agent.AbstractAgent/internalTrain (line 201)
+            trainingResult = run(tm);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.agent.AbstractAgent/train (line 67)
+    trainingResult = internalTrain(this,env,trainOptsOrResult, ...
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in trainAndEvaluate (line 70)
+            result = train(agent, S.env, trainOpts, Evaluator = evl);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in optimizeAgent>@(p)trainAndEvaluate(p,agentType,envSrc,opt) (line 83)
+        @(p) trainAndEvaluate(p, agentType, envSrc, opt), ...
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in bayesoptim.callObjFcnParallel>callObjNormallyParallel (line 51)
+            [Objective, ConstraintViolations, UserData] = ObjectiveFcn(conditionalizedX);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in bayesoptim.callObjFcnParallel (line 12)
+        = callObjNormallyParallel(ObjectiveFcn, ObjectiveNargout, NumCoupledConstraints, conditionalizedX);
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+==== 08-Jul-2026 19:57:38 | agent=PG | worker=6 ====
+params: actorLR=0.000480139, criticLR=1.03499e-05, EntropyLossWeight=0.000176052, DiscountFactor=0.950013
+Error using rl.internal.train.ACGradTrainer/run_internal_/nestedRunEpisode (line 169)
+Simulation aborted
+
+Error in rl.internal.train.ACGradTrainer/run_internal_ (line 290)
+                            out = nestedRunEpisode(policy);
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.train.ACGradTrainer/run_ (line 35)
+            result = run_internal_(this);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.train.Trainer/run (line 8)
+            result = run_(this);
+            ^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.OnlineTrainingManager/run_ (line 158)
+            trainResult = run(trainer);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.TrainingManager/run (line 4)
+            result = run_(this);
+            ^^^^^^^^^^^^^^^^^^^^
+Error in rl.agent.AbstractAgent/internalTrain (line 201)
+            trainingResult = run(tm);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.agent.AbstractAgent/train (line 67)
+    trainingResult = internalTrain(this,env,trainOptsOrResult, ...
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in trainAndEvaluate (line 70)
+            result = train(agent, S.env, trainOpts, Evaluator = evl);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in optimizeAgent>@(p)trainAndEvaluate(p,agentType,envSrc,opt) (line 83)
+        @(p) trainAndEvaluate(p, agentType, envSrc, opt), ...
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in bayesoptim.callObjFcnParallel>callObjNormallyParallel (line 51)
+            [Objective, ConstraintViolations, UserData] = ObjectiveFcn(conditionalizedX);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in bayesoptim.callObjFcnParallel (line 12)
+        = callObjNormallyParallel(ObjectiveFcn, ObjectiveNargout, NumCoupledConstraints, conditionalizedX);
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+

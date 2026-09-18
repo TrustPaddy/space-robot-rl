@@ -1,0 +1,13 @@
+Bayes-Optimierung Report
+Agent            : DDPG
+Zeitstempel      : 09-Jul-2026 19:19:18
+Evaluations      : 60
+Bester Trial     : #49
+Bester Score     : -0.536371  (Objective 0.536371)
+
+Beste Hyperparameter (bestPoint):
+  actorLR                = 1.83613e-05
+  criticLR               = 0.000593536
+  MiniBatchSize          = 381
+  deviation              = 0.0700304
+  TargetSmoothFactor     = 0.0462951

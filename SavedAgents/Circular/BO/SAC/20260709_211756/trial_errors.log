@@ -1,0 +1,84 @@
+==== 10-Jul-2026 00:05:33 | agent=SAC | worker=6 ====
+params: actorLR=8.05933e-05, criticLR=0.000153288, MiniBatchSize=152, TargetSmoothFactor=0.00104049, entropyLR=0.00572227
+Error using rl.internal.train.EpisodeRunner/runEpisode_ (line 173)
+Simulation aborted
+
+Error in rl.internal.train.EpisodeRunner/syncsim_series (line 51)
+                out = runEpisode_(this,policy);
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.train.OffPolicyTrainer/run_internal_batch_learner_ (line 652)
+                        syncsim_series(episode_runner,policy,sims_to_spawn);
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.train.OffPolicyTrainer/run_ (line 62)
+                result = run_internal_batch_learner_(this);
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.train.Trainer/run (line 8)
+            result = run_(this);
+            ^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.OnlineTrainingManager/run_ (line 158)
+            trainResult = run(trainer);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.TrainingManager/run (line 4)
+            result = run_(this);
+            ^^^^^^^^^^^^^^^^^^^^
+Error in rl.agent.AbstractAgent/internalTrain (line 201)
+            trainingResult = run(tm);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.agent.AbstractAgent/train (line 67)
+    trainingResult = internalTrain(this,env,trainOptsOrResult, ...
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in trainAndEvaluate (line 70)
+            result = train(agent, S.env, trainOpts, Evaluator = evl);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in optimizeAgent>@(p)trainAndEvaluate(p,agentType,envSrc,opt) (line 83)
+        @(p) trainAndEvaluate(p, agentType, envSrc, opt), ...
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in bayesoptim.callObjFcnParallel>callObjNormallyParallel (line 51)
+            [Objective, ConstraintViolations, UserData] = ObjectiveFcn(conditionalizedX);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in bayesoptim.callObjFcnParallel (line 12)
+        = callObjNormallyParallel(ObjectiveFcn, ObjectiveNargout, NumCoupledConstraints, conditionalizedX);
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+==== 10-Jul-2026 00:05:33 | agent=SAC | worker=3 ====
+params: actorLR=0.00750598, criticLR=0.000329225, MiniBatchSize=99, TargetSmoothFactor=0.00105611, entropyLR=0.00176339
+Error using rl.internal.train.EpisodeRunner/runEpisode_ (line 173)
+Simulation aborted
+
+Error in rl.internal.train.EpisodeRunner/syncsim_series (line 51)
+                out = runEpisode_(this,policy);
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.train.OffPolicyTrainer/run_internal_batch_learner_ (line 652)
+                        syncsim_series(episode_runner,policy,sims_to_spawn);
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.train.OffPolicyTrainer/run_ (line 62)
+                result = run_internal_batch_learner_(this);
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.train.Trainer/run (line 8)
+            result = run_(this);
+            ^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.OnlineTrainingManager/run_ (line 158)
+            trainResult = run(trainer);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.internal.trainmgr.TrainingManager/run (line 4)
+            result = run_(this);
+            ^^^^^^^^^^^^^^^^^^^^
+Error in rl.agent.AbstractAgent/internalTrain (line 201)
+            trainingResult = run(tm);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in rl.agent.AbstractAgent/train (line 67)
+    trainingResult = internalTrain(this,env,trainOptsOrResult, ...
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in trainAndEvaluate (line 70)
+            result = train(agent, S.env, trainOpts, Evaluator = evl);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in optimizeAgent>@(p)trainAndEvaluate(p,agentType,envSrc,opt) (line 83)
+        @(p) trainAndEvaluate(p, agentType, envSrc, opt), ...
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in bayesoptim.callObjFcnParallel>callObjNormallyParallel (line 51)
+            [Objective, ConstraintViolations, UserData] = ObjectiveFcn(conditionalizedX);
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Error in bayesoptim.callObjFcnParallel (line 12)
+        = callObjNormallyParallel(ObjectiveFcn, ObjectiveNargout, NumCoupledConstraints, conditionalizedX);
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+

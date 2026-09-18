@@ -1,0 +1,13 @@
+Bayes-Optimierung Report
+Agent            : TD3
+Zeitstempel      : 09-Jul-2026 21:12:53
+Evaluations      : 60
+Bester Trial     : #47
+Bester Score     : -0.867153  (Objective 0.867153)
+
+Beste Hyperparameter (bestPoint):
+  actorLR                = 0.00893204
+  criticLR               = 0.00306799
+  MiniBatchSize          = 369
+  deviation              = 0.452119
+  TargetSmoothFactor     = 0.0105302

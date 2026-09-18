@@ -1,0 +1,13 @@
+Bayes-Optimierung Report
+Agent            : PPO
+Zeitstempel      : 10-Jul-2026 23:25:46
+Evaluations      : 60
+Bester Trial     : #29
+Bester Score     : -0.231799  (Objective 0.231799)
+
+Beste Hyperparameter (bestPoint):
+  actorLR                = 0.000463507
+  criticLR               = 0.0050037
+  MiniBatchSize          = 71
+  ExperienceHorizon      = 464
+  EntropyLossWeight      = 0.0212758

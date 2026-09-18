@@ -1,3 +1,4 @@
+
 %%  1) Trajektorie/IKrobuster machen
 clc; clear; close all;
 rng(0,'twister')

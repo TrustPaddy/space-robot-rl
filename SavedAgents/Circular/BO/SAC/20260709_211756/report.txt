@@ -1,0 +1,13 @@
+Bayes-Optimierung Report
+Agent            : SAC
+Zeitstempel      : 10-Jul-2026 00:05:36
+Evaluations      : 60
+Bester Trial     : #40
+Bester Score     : -0.309124  (Objective 0.309124)
+
+Beste Hyperparameter (bestPoint):
+  actorLR                = 0.00744192
+  criticLR               = 0.000363942
+  MiniBatchSize          = 139
+  TargetSmoothFactor     = 0.00124394
+  entropyLR              = 0.0035968

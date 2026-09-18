@@ -1,0 +1,12 @@
+Bayes-Optimierung Report
+Agent            : PG
+Zeitstempel      : 08-Jul-2026 19:57:40
+Evaluations      : 60
+Bester Trial     : #33
+Bester Score     : -0.345249  (Objective 0.345249)
+
+Beste Hyperparameter (bestPoint):
+  actorLR                = 0.00183686
+  criticLR               = 0.00422356
+  EntropyLossWeight      = 0.000108629
+  DiscountFactor         = 0.95783

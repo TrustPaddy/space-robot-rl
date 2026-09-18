@@ -1,0 +1,13 @@
+Bayes-Optimierung Report
+Agent            : TRPO
+Zeitstempel      : 08-Jul-2026 17:55:06
+Evaluations      : 61
+Bester Trial     : #34
+Bester Score     : -0.092169  (Objective 0.092169)
+
+Beste Hyperparameter (bestPoint):
+  criticLR               = 0.0046939
+  EntropyLossWeight      = 0.000103378
+  GAEFactor              = 0.943881
+  DiscountFactor         = 0.961042
+  KLDivergenceLimit      = 0.00750656

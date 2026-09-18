@@ -1,5 +1,13 @@
 clc; clear; close all;
 
+% --- Projektpfade sicherstellen: sonst findet das Simulink-Modell die Funktion
+%     collisionCheckWrapper (aus src/env) nicht -> "Undefined function"-Fehler. ---
+if exist('setupSpaceRobotEnv','file') ~= 2
+    run(fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))), 'startup.m'));
+end
+% Projekt-Root fuer robuste Datei-Pfade (unabhaengig vom Current Folder)
+proot = fileparts(fileparts(fileparts(mfilename('fullpath'))));   % src/kpi -> src -> Root
+
 % Sicherheits-/Spec-Parameter
 d_safe   = 0.02;        % Mindestabstand [m]
 tau_max  = 2.0;         % Aktuatorgrenze [N*m]
@@ -61,7 +69,7 @@ z = center(3) + 0*t;
 traj = [x' y' z'];   % gewünschte EE-Punkte
 
 % Roboter laden
-robot_rbt = importrobot('SpaceRobot.urdf');
+robot_rbt = importrobot(fullfile(proot,'SpaceRobot.urdf'));
 robot_rbt.DataFormat = 'row';
 eeBodyName = robot_rbt.BodyNames{end};
 
@@ -79,7 +87,16 @@ assignin('base','EE_ref',EE_ref);
 assignin('base','EE_vref',EE_vref);
 
 % den Agenten Namen ändern
-load('SpaceRobot_PPO_agent.mat','agent');   % legt 'agent' in base an
+% Agenten-Datei zum Auswerten. Wird im Optimized-Modus von SpaceRobotDynamic.m
+% erzeugt (Training speichert nach SavedAgents/Circular/Optimized/<AGENT>.mat).
+agentFile = fullfile(proot, 'SavedAgents','Circular','Default','PPO.mat');
+if ~isfile(agentFile)
+    error('calculate_kpi:agentMissing', ...
+        ['Agenten-Datei nicht gefunden:\n  %s\n' ...
+         'Trainiere TRPO zuerst im Optimized-Modus (SpaceRobotDynamic.m) ' ...
+         'oder setze agentFile auf einen vorhandenen Agenten.'], agentFile);
+end
+load(agentFile,'agent');   % legt 'agent' in base an
 %% 
 
 mdl = 'SpaceRobot';
@@ -90,7 +107,9 @@ set_param(mdl, ...
     'SolverType', 'Fixed-step' ...
 );
 
-for i = 1:100
+N = 5;
+
+for i = 1:N
     simOut = sim("SpaceRobot");
     logsouts{i} = simOut.logsout;
 end
@@ -184,8 +203,6 @@ kpi = computeKPIsFromLogs(logsouts, params)
 % legend('Target EE Path', 'Average Actual EE Path', 'Location', 'best');
 % title('End Effector Trajectory (XY) – Average over 30 Episodes');
 
-N = 100;
-
 % --- gemeinsamer Zeitvektor (z.B. Episode 1) ---
 ep0 = 1;
 q0_ts = logsouts{ep0}.getElement('basis_ori').Values;
@@ -227,21 +244,18 @@ Q_std  = std(Q_all, 0, 3, 'omitnan');        % optional
 
 Q_mean = Q_mean ./ vecnorm(Q_mean, 2, 2);    % normalisieren je Zeile
 
-% --- Plot: w,x,y,z über Zeit ---
-figure;
-plot(t_common, Q_mean(:,1), 'LineWidth', 1.5); hold on;
-plot(t_common, Q_mean(:,2), 'LineWidth', 1.5);
-plot(t_common, Q_mean(:,3), 'LineWidth', 1.5);
-plot(t_common, Q_mean(:,4), 'LineWidth', 1.5);
-grid on;
-xlabel('Time [s]');
-ylabel('Normalized Quaternion');
-legend('w','x','y','z','Location','best');
-xlim([0 9]); ylim([-0.2 1.2])
-title('Base Orientation – Average over 30 Episodes');
-
-
-
+% % --- Plot: w,x,y,z über Zeit ---
+% figure;
+% plot(t_common, Q_mean(:,1), 'LineWidth', 1.5); hold on;
+% plot(t_common, Q_mean(:,2), 'LineWidth', 1.5);
+% plot(t_common, Q_mean(:,3), 'LineWidth', 1.5);
+% plot(t_common, Q_mean(:,4), 'LineWidth', 1.5);
+% grid on;
+% xlabel('Time [s]');
+% ylabel('Normalized Quaternion');
+% legend('w','x','y','z','Location','best');
+% xlim([0 9]); ylim([-0.2 1.2])
+% title('Base Orientation – Average over 30 Episodes');
 
 
 function data2D = reshape_time_series(raw)

@@ -3,13 +3,11 @@ function in = localResetFunction(in)
 
     nJ = 4;
 
-    % --- Startpose (IK-Seed, falls vorhanden) ---
-    try
-        q_start = evalin('base','q_des(1,:).'';');
-        if numel(q_start) ~= nJ, error('BadSize'); end
-    catch
-        q_start = zeros(nJ,1);   % Fallback
-    end
+    % --- Startpose: feste Null-Pose ---
+    % Bewusst KEIN evalin('base',...): das ist parallel-sicher (kein Zugriff auf
+    % den Worker-Base-Workspace) und verhaltensgleich zum Original, da q_des in
+    % SpaceRobotDynamic.m ohnehin nur Nullen enthaelt (IK-Schleife auskommentiert).
+    q_start = zeros(nJ,1);
 
     % --- Anfangswerte ---
     q0        = q_start;

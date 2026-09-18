@@ -1,0 +1,92 @@
+Ablation study of reward function. each time i will delete one weight or set it to 0. 
+
+initial:
+
+ % ---- Gewichte (Startwerte) ----
+    W.wp   = 150;    % EE-Position
+    W.wv   = 25;     % EE-Geschwindigkeit
+    W.wori = 200;    % Basis-Orientierung (P)
+    W.wwb  = 8;      % Basis-Winkelgeschw. (D)
+    W.wvb  = 2;      % Basis-Linear
+    W.wu   = 0.02;   % Momente
+    W.wd   = 0.06;   % Delta-Momente (etwas höher für Smoothness)
+
+wp = 0:
+    K1: -6.4846
+    K2: 0.2381
+    K3: 0.9374
+    K4: 0.0460
+    K5: 0
+    K6: 0
+    K7: 0.6259
+    K8: 0.0489
+    K9: 2.8680
+
+wv = 0:
+    K1: -0.8460
+    K2: 0.0218
+    K3: 0.5503
+    K4: 0.0488
+    K5: 0
+    K6: 0.0015
+    K7: 0.6553
+    K8: 0.0477
+    K9: 3.5615
+
+wori = 0:
+ K1: -23.6495
+    K2: 0.0174
+    K3: 0.4049
+    K4: 0.6683
+    K5: 0
+    K6: 0.0473
+    K7: 0.5880
+    K8: 0.1623
+    K9: 4.3633
+
+wwb = 0:
+    K1: -1.1735
+    K2: 0.0317
+    K3: 0.4870
+    K4: 0.0589
+    K5: 0
+    K6: 0.0022
+    K7: 0.6568
+    K8: 0.0510
+    K9: 3.5535
+
+wvb = 0:
+    K1: -1.3121
+    K2: 0.0390
+    K3: 0.6518
+    K4: 0.0545
+    K5: 0
+    K6: 4.3184e-04
+    K7: 0.6701
+    K8: 0.0474
+    K9: 3.1920
+
+wu = 0:
+    K1: -1.3201
+    K2: 0.0371
+    K3: 0.5790
+    K4: 0.0605
+    K5: 0
+    K6: 0
+    K7: 0.6178
+    K8: 0.0577
+    K9: 3.8555
+
+wd = 0:
+ K1: -1.0952
+    K2: 0.0291
+    K3: 0.5437
+    K4: 0.0570
+    K5: 0
+    K6: 3.4959e-04
+    K7: 0.6320
+    K8: 0.0531
+    K9: 3.7240
+
+
+

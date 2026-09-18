@@ -151,33 +151,38 @@ space-robot-rl/
 |
 |-- SpaceRobot.slx                  # Main Simulink model (robot + RL environment)
 |-- SpaceRobot.urdf                 # Robot description (kinematics & inertia)
+|-- startup.m                       # Run once per session: sets MATLAB path (Root + src/)
 |
-|-- SpaceRobotDynamic_ppo.m         # PPO agent training script
-|-- SpaceRobotDynamic_ddpg.m        # DDPG agent training script
-|-- SpaceRobotDynamic_td3.m         # TD3 agent training script
-|-- SpaceRobotDynamic_sac.m         # SAC agent training script
-|-- SpaceRobotDynamic_trpo.m        # TRPO agent training script
-|-- SpaceRobotDynamic_pg.m          # Policy Gradient agent training script
+|-- src/
+|   |-- bo/                         # Bayesian hyperparameter optimization
+|   |   |-- bo.m                    #   Launcher (choose agentType)
+|   |   |-- optimizeAgent.m         #   Driver: parallel pool + trials + pre-flight + saving
+|   |   |-- runAllOptimizations.m   #   Optimize several agent types in sequence
+|   |   |-- getSearchSpace.m        #   Search space per agent type
+|   |   |-- buildAgent.m            #   Build an agent with the correct options per type
+|   |   |-- trainAndEvaluate.m      #   bayesopt objective (train + deterministic eval)
+|   |   |-- checkBuildAgents.m      #   Fast build check for all 6 agents (no Simulink)
+|   |   |-- saveBOState.m           #   bayesopt checkpoint output function
+|   |   `-- diagnoseBOErrors.m      #   Dump real per-trial errors from a saved BO run
+|   |-- env/                        # Simulink environment glue
+|   |   |-- setupSpaceRobotEnv.m    #   Worker-safe environment builder
+|   |   |-- localResetFunction.m    #   Episode reset function (env.ResetFcn)
+|   |   `-- collisionCheckWrapper.m #   Collision check called by the model at runtime
+|   |-- training/
+|   |   |-- SpaceRobotDynamic.m     #   Interactive training script (choose agentType)
+|   |   `-- perAgent/               #   Per-agent training variants (PG/PPO/TRPO/DDPG/TD3/SAC)
+|   |-- kpi/                        # Evaluation
+|   |   |-- calculate_kpi.m         #   Run a trained agent & compute KPIs
+|   |   |-- calculate_kpi_statistik.m #  KPI statistics across agents
+|   |   `-- computeKPIsFromLogs.m   #   Compute 9 KPIs from simulation logs
+|   `-- utils/                      # KreisbahnSR.m (trajectory/IK), checksUnits.m
 |
-|-- calculate_kpi.m                 # Run trained agent & compute KPIs over 100 episodes
-|-- computeKPIsFromLogs.m           # Compute 9 KPIs from simulation logs
-|-- localResetFunction.m            # Episode reset function for RL training
-|
-|-- KreisbahnSR.m                   # Circular trajectory generation & IK validation
-|-- collisionCheckWrapper.m         # Collision detection wrapper for Simulink
-|-- checksUnits.m                   # Simulink model unit consistency verification
-|
-|-- SpaceRobot_PPO_agent.mat        # Pre-trained PPO agent (default)
-|-- SpaceRobot_PPO_agent_optimized.mat  # Pre-trained PPO agent (optimized)
-|-- SpaceRobot_DDPG_agent.mat       # Pre-trained DDPG agent
-|-- SpaceRobot_TD3_agent.mat        # Pre-trained TD3 agent
-|-- SpaceRobot_SAC_agent.mat        # Pre-trained SAC agent
-|-- SpaceRobot_TRPO_agent.mat       # Pre-trained TRPO agent
-|-- SpaceRobot_PG_agent.mat         # Pre-trained PG agent
-|
-|-- verify_reward.slx               # Reward function verification model
-|-- verify_tau.slx                  # Formal torque constraint verification model
-|-- sldv_output/                    # Simulink Design Verifier results
+|-- models/                        # verify_reward.slx, verify_tau.slx (verification harnesses)
+|-- SavedAgents/                   # Trained agents + BO results (Circular/Linear x Default/Optimized/BO)
+|-- Figures/                       # Figures for the report/README (videos/ subfolder for .avi)
+|-- legacy/                        # Unused / experimental scripts (SPART tutorials)
+|-- backup/                        # Model backups (.slx.original / .r2025b)
+`-- _personal/                     # Non-project personal files
 ```
 
 ## Getting Started
@@ -192,26 +197,40 @@ space-robot-rl/
 | Reinforcement Learning Toolbox | R2025b or later | RL agent creation, training, and evaluation |
 | Simulink Design Verifier | R2025b or later | Formal torque verification only (optional) |
 
+> **Set up the path first.** Open MATLAB with the project root as the current folder and run
+> `startup` once per session. This adds the root and all `src/` subfolders to the MATLAB path.
+> The two main entry scripts (`bo.m`, `SpaceRobotDynamic.m`) also call `startup` automatically.
+
 ### Training an Agent
 
-1. Open MATLAB and navigate to the project directory
-2. Run any training script, e.g.:
+1. Open MATLAB, set the current folder to the project root, and run `startup`.
+2. Run the interactive training script and pick the algorithm via the `agentType` variable:
 ```matlab
-SpaceRobotDynamic_ppo
+SpaceRobotDynamic      % edit agentType = "PPO" | "TRPO" | "PG" | "DDPG" | "TD3" | "SAC"
 ```
 The script will
    - Load the robot model (`SpaceRobot.urdf`)
    - Open the Simulink environment (`SpaceRobot.slx`)
-   - Configure the RL agent and train for 1000 episodes
+   - Build the agent with its best hyperparameters and train for 1000 episodes
    - Save the trained agent to a `.mat` file
+
+Per-agent variants are also available under `src/training/perAgent/` (e.g. `PPO`, `TRPO`).
+
+### Hyperparameter Optimization (Bayesian)
+
+```matlab
+bo                     % edit agentType inside bo.m; results go to SavedAgents/Circular/BO/
+```
+`optimizeAgent` runs a parallel Bayesian search with a fast pre-flight check; failed trials are
+logged to `<runDir>/trial_errors.log`. Inspect a finished/aborted run with `diagnoseBOErrors`.
 
 ### Using a Pre-Trained Agent
 
-All pre-trained agents are stored as `.mat` files and can be loaded directly in MATLAB:
+Trained agents are stored under `SavedAgents/` and can be loaded directly:
 
 ```matlab
-% Load the optimized PPO agent
-agent = load('SpaceRobot_PPO_agent_optimized.mat').agent;
+% Load a pre-trained PPO agent
+agent = load('SavedAgents/Circular/Default/PPO.mat').agent;
 
 % Simulate the agent in the Simulink environment
 simOut = sim('SpaceRobot');
@@ -223,7 +242,7 @@ simOut = sim('SpaceRobot');
 calculate_kpi
 ```
 
-This loads a pre-trained PPO agent, runs 100 evaluation episodes, and computes the 9 KPIs (tracking error, base disturbance, collisions, energy consumption, etc.).
+This loads a pre-trained agent, runs evaluation episodes, and computes the 9 KPIs (tracking error, base disturbance, collisions, energy consumption, etc.).
 
 ### Simulation Parameters
 
