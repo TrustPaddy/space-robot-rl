@@ -178,7 +178,7 @@ function kpi = computeKPIsFromLogs(logsoutIn, params)
     kpi.K4 = mean(epOriMean);          % Basis-Orientierungsfehler
     kpi.K5 = mean(epHasCollision);     % Kollisionsrate (0..1)
     kpi.K6 = mean(epJointViol);        % Gelenkgrenzen-Verletzungsrate
-    kpi.K7 = 1 - mean(epJerk);             % Smoothness / Jerk
+    kpi.K7 = mean(epJerk);             % mittlerer Jerk (niedriger = glatter), wie K7 im Paper
     kpi.K8 = mean(epBaseAngVelMean);   % mittlere Basiswinkelgeschwindigkeit
     kpi.K9 = mean(epEnergy);           % mittlerer Energieverbrauch
 end

@@ -1,50 +1,43 @@
 function S = setupSpaceRobotEnv(cfg)
 % setupSpaceRobotEnv  Baut die SpaceRobot-RL-Umgebung worker-sicher auf.
 %
-%   S = setupSpaceRobotEnv()      % Standard: Kreisbahn wie in SpaceRobotDynamic.m
-%   S = setupSpaceRobotEnv(cfg)   % cfg-Struct zum Ueberschreiben von Defaults
+%   S = setupSpaceRobotEnv()      % Nominalkonfiguration aus benchmarkConfig
+%   S = setupSpaceRobotEnv(cfg)   % cfg: vollstaendig (benchmarkConfig) oder
+%                                 % Struct mit Ueberschreibungen
 %
-%   Diese Funktion kapselt den kompletten Umgebungs-Aufbau aus
-%   SpaceRobotDynamic.m in EINER Funktion, damit sie 1:1 identisch auf dem
-%   Client UND auf jedem Parallel-Worker laeuft. Alle Variablen, die die
-%   Simulink-"From Workspace"-Bloecke und die ResetFcn brauchen, werden in
-%   den (Worker-)Base-Workspace geschrieben; das Modell wird geladen (nicht
-%   geoeffnet -> keine GUI auf Workern).
+%   Alle Werte kommen aus benchmarkConfig. Diese Funktion schreibt jede
+%   Variable, die SpaceRobot.slx zur Simulationszeit liest, in den
+%   (Worker-)Base-Workspace; das Modell wird geladen (nicht geoeffnet -> keine
+%   GUI auf Workern). Identisch auf Client und Parallel-Workern.
+%
+%   Vom Modell gelesene Variablen:
+%     Ts, Ts_agent                 Rate Transitions, Reward-Block
+%     EE_ref, EE_vref              Referenz (From Workspace)
+%     robot_rbt, d_safe            Kollisionsmonitor
+%     tau_sat                      Saturation vor der Strecke
+%     robotP                       Massen, Traegheiten, Gelenkdaempfung
+%     rewardW                      Reward-Gewichte (Parameter des MATLAB-Function-Blocks)
+%     q0, dq0                      Gelenk-Startzustand (von der ResetFcn je Episode gesetzt)
 %
 %   Rueckgabe S mit Feldern:
-%     env, obsInfo, actInfo, Ts_agent, Ts, T, mdl, agentBlk
-%
-%   Wird von trainAndEvaluate.m / bo.m ueber parallel.pool.Constant genutzt,
-%   sodass jeder Worker die Env genau einmal baut und wiederverwendet.
+%     env, obsInfo, actInfo, Ts_agent, Ts, T, mdl, agentBlk, cfg
 
     if nargin < 1 || isempty(cfg), cfg = struct(); end
-
-    % ---- Defaults (identisch zu SpaceRobotDynamic.m) ----
-    def.T        = 8.5;          % Episodendauer [s]
-    def.r        = 0.5;          % Kreisradius [m]
-    def.Ts       = 0.01;         % diskrete Schrittzeit RL-Schleife [s]
-    def.Ts_agent = 0.1;          % Agent-Sample-Time [s]
-    def.mdl      = 'SpaceRobot';
-    cfg = setDefaults(cfg, def);
+    cfg = benchmarkConfig(cfg);
 
     T        = cfg.T;
-    r        = cfg.r;
     Ts       = cfg.Ts;
     Ts_agent = cfg.Ts_agent;
     mdl      = cfg.mdl;
+    nJ       = 4;
 
-    % ---- Sicherheits-/Spec-Parameter (vom Simulink-Modell erwartet) ----
-    d_safe   = 0.02;                 % Mindestabstand [m]
-    tau_max  = 2.0;                  % Aktuatorgrenze [N*m]
-    dt_agent = 0.05;                 % (Legacy, vom Modell referenziert)
-    q1_lim   = deg2rad([ -85  85 ]);
-    qi_lim   = deg2rad([ -170 170 ]);
-
-    assignin('base','d_safe',d_safe);
-    assignin('base','tau_max',tau_max);
-    assignin('base','dt_agent',dt_agent);
-    assignin('base','q1_lim',q1_lim);
-    assignin('base','qi_lim',qi_lim);
+    % ---- Sicherheits-/Spec-Parameter ----
+    assignin('base','d_safe',  cfg.d_safe);
+    assignin('base','tau_max', cfg.tau_max);
+    assignin('base','tau_sat', cfg.tau_sat_scale * cfg.tau_max);
+    assignin('base','dt_agent',0.05);                       % Legacy
+    assignin('base','q1_lim',  deg2rad(cfg.q1_lim_deg));
+    assignin('base','qi_lim',  deg2rad(cfg.qi_lim_deg));
 
     % Schrittzeiten MUESSEN im Base-Workspace liegen: die Simulink-Bloecke
     % 'Rate Transition'/'Rate Transition1'/'collision monitor/Rate Transition'
@@ -54,31 +47,36 @@ function S = setupSpaceRobotEnv(cfg)
     assignin('base','Ts',Ts);
     assignin('base','Ts_agent',Ts_agent);
 
-    % ---- Soll-Kreisbahn ----
-    omega  = pi/T;
-    center = [4.5-r, 0.0, 0.0];
+    % ---- Roboterparameter und Reward-Gewichte ----
+    s = cfg.robot.param_scale;
+    robotP = struct( ...
+        'm_base',        s * cfg.robot.m_base, ...
+        'I_base',        s * cfg.robot.I_base, ...
+        'm_link',        s * cfg.robot.m_link, ...
+        'I_link',        s * cfg.robot.I_link, ...
+        'joint_damping', s * cfg.robot.joint_damping);
+    assignin('base','robotP',robotP);
+    assignin('base','rewardW',cfg.reward);
+
+    % ---- Startzustand (ResetFcn ueberschreibt q0 je Episode) ----
+    assignin('base','q0',      cfg.init.q0(:));
+    assignin('base','dq0',     zeros(nJ,1));
+    assignin('base','base_v0', zeros(3,1));
+    assignin('base','base_w0', zeros(3,1));
+    assignin('base','phi0',    0);
+    assignin('base','reward_init', 0);
+    assignin('base','isdone_init', 0);
+
+    % ---- Referenztrajektorie ----
     t = 0:Ts:T;
-
-    x = center(1) + r*cos(omega*t);
-    y = center(2) + r*sin(omega*t);
-    z = center(3) + 0*t;
-    traj = [x' y' z'];               % gewuenschte EE-Punkte
-
-    dt   = mean(diff(t));
-    vref = [zeros(1,3); diff(traj)/dt];
-    EE_ref  = timeseries(traj, t);   % Nx3 Soll-Position
-    EE_vref = timeseries(vref, t);   % Nx3 Soll-Geschwindigkeit
+    [EE_ref, EE_vref] = referenceTrajectory(cfg, t);
     assignin('base','EE_ref',EE_ref);
     assignin('base','EE_vref',EE_vref);
 
-    % ---- Roboter / IK (Start-Konfiguration) ----
-    % q_des bleibt (wie im Originalskript) Null; die ResetFcn nutzt eine feste
-    % Null-Startpose. Wir legen q_des dennoch an, falls das Modell es referenziert.
+    % ---- Roboter (Kollisionsmonitor) ----
     robot_rbt = importrobot('SpaceRobot.urdf');
     robot_rbt.DataFormat = 'row';
-    nJ = 4;
-    q_des = zeros(numel(t), nJ);
-    assignin('base','q_des',q_des);
+    assignin('base','q_des',zeros(numel(t), nJ));   % Legacy
     % Der 'collision monitor/MATLAB Function'-Block wertet 'robot_rbt' zur
     % Laufzeit aus -> muss ebenfalls im Base-Workspace liegen (sonst Sim-Abbruch).
     assignin('base','robot_rbt',robot_rbt);
@@ -96,32 +94,61 @@ function S = setupSpaceRobotEnv(cfg)
     agentBlk = [mdl '/RL_Agent'];
 
     % ---- Observation & Action Definition ----
+    % Reihenfolge wie am Observation-Mux im Modell:
+    %   [e_p(3); e_v(3); v_base(3); w_base(3); q(4); dq(4); e_ori(3)] = 23
     ePLim=0.5; eVLim=1.0; qLim=pi; dqLim=3; vBLim=0.5; wBLim=1.0; eOriLim=pi;
-    obsLow  = [-ePLim*ones(3,1); -eVLim*ones(3,1); -qLim*ones(nJ,1); ...
-               -dqLim*ones(nJ,1); -vBLim*ones(3,1); -wBLim*ones(3,1); -eOriLim*ones(3,1)];
+    obsLow  = [-ePLim*ones(3,1); -eVLim*ones(3,1); -vBLim*ones(3,1); -wBLim*ones(3,1); ...
+               -qLim*ones(nJ,1); -dqLim*ones(nJ,1); -eOriLim*ones(3,1)];
     obsHigh = -obsLow;
     obsInfo = rlNumericSpec([numel(obsLow) 1], LowerLimit=obsLow, UpperLimit=obsHigh, Name="obs");
 
     actInfo = rlNumericSpec([nJ 1], ...
         'Name','tau', ...
-        'LowerLimit', -tau_max*ones(nJ,1), ...
-        'UpperLimit',  tau_max*ones(nJ,1));
+        'LowerLimit', -cfg.tau_max*ones(nJ,1), ...
+        'UpperLimit',  cfg.tau_max*ones(nJ,1));
 
     % ---- RL-Umgebung ----
     env = rlSimulinkEnv(mdl, agentBlk, obsInfo, actInfo);
-    env.ResetFcn = @localResetFunction;
+    initCfg = cfg.init;
+    env.ResetFcn = @(in) localResetFunction(in, initCfg);
 
     % ---- Rueckgabe ----
     S = struct('env',env, 'obsInfo',obsInfo, 'actInfo',actInfo, ...
                'Ts_agent',Ts_agent, 'Ts',Ts, 'T',T, ...
-               'mdl',mdl, 'agentBlk',agentBlk);
+               'mdl',mdl, 'agentBlk',agentBlk, 'cfg',cfg);
 end
 
-function cfg = setDefaults(cfg, def)
-    f = fieldnames(def);
-    for i = 1:numel(f)
-        if ~isfield(cfg, f{i}) || isempty(cfg.(f{i}))
-            cfg.(f{i}) = def.(f{i});
-        end
+function [EE_ref, EE_vref] = referenceTrajectory(cfg, t)
+% Soll-Position und -Geschwindigkeit des Endeffektors als timeseries (Nx3).
+    r      = cfg.r;
+    T      = cfg.T;
+    center = [4.5 - r, 0.0, 0.0];   % Start bei x = 4.5 m (gestreckter Arm)
+
+    switch string(cfg.traj)
+        case "circle"
+            omega = pi/T;
+            traj  = [center(1) + r*cos(omega*t); ...
+                     center(2) + r*sin(omega*t); ...
+                     center(3) + 0*t]';
+
+        case "linear"
+            % Zwei Geraden durch drei Kreispunkte (Gl. 5 im Paper)
+            P0 = [center(1)+r, center(2),   center(3)];
+            P1 = [center(1),   center(2)+r, center(3)];
+            P2 = [center(1)-r, center(2),   center(3)];
+            t1 = T/2;
+            traj = zeros(numel(t), 3);
+            idx1 = (t <= t1);
+            idx2 = ~idx1;
+            traj(idx1,:) = P0 + (t(idx1)'/t1)              .* (P1 - P0);
+            traj(idx2,:) = P1 + ((t(idx2)' - t1)/(T - t1)) .* (P2 - P1);
+
+        otherwise
+            error('setupSpaceRobotEnv:traj', 'Unbekannte Trajektorie "%s".', cfg.traj);
     end
+
+    dt   = mean(diff(t));
+    vref = [zeros(1,3); diff(traj)/dt];   % einfache Ableitung
+    EE_ref  = timeseries(traj, t);
+    EE_vref = timeseries(vref, t);
 end
