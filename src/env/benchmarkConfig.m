@@ -55,8 +55,11 @@ function cfg = benchmarkConfig(varargin)
     cfg.reward.kb    = 0.05;   % Proximity-Bonus    (0 -> r_bonus aus)
     cfg.reward.sigma = 0.02;   % Breite Proximity-Bonus [m]
     cfg.reward.C     = 500;    % Normierung
-    cfg.reward.rfail = -1;     % Terminal-Strafe
-    cfg.reward.fail_remaining = 0;   % 1 -> rfail fuer jeden verbleibenden Schritt
+    cfg.reward.rfail = -1;     % Terminal-Strafe je Schritt
+    % 1 -> rfail fuer den Abbruchschritt UND jeden verbleibenden Schritt bis zum
+    % Horizont. Mit nur einmal -1 lohnt sich ein frueher Abbruch, weil alle
+    % Schritt-Rewards negativ sind (Pilot: 0 % vollstaendige Episoden vs. 100 %).
+    cfg.reward.fail_remaining = 1;
     cfg.reward.dmax  = 10;     % Abbruch, wenn EE-Fehler > dmax [m]
 
     % ---- Startzustand (Training) ----
