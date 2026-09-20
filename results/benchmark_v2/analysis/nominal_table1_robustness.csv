@@ -1,8 +1,8 @@
 config,nRuns,nSuccess,successRate,nEpisodes,nAbort,abortRate,abortCollisionShare
-PPO_optimized,5,5,1,155,0,0,0
-TRPO_default,5,5,1,155,0,0,0
-DDPG_default,5,3,0.6,155,62,0.4,0
-SAC_default,5,3,0.6,155,62,0.4,0
-PPO_default,5,2,0.4,155,93,0.6,0
-TD3_default,5,2,0.4,155,93,0.6,0.397849462365591
-PG_default,5,1,0.2,155,124,0.8,0
+PPO_optimized,10,10,1,310,0,0,0
+TRPO_default,10,10,1,310,0,0,0
+SAC_default,10,6,0.6,310,124,0.4,0
+TD3_default,10,5,0.5,310,150,0.483870967741935,0.246666666666667
+DDPG_default,10,4,0.4,310,160,0.516129032258065,0.225
+PPO_default,10,3,0.3,310,217,0.7,0.142857142857143
+PG_default,10,2,0.2,310,248,0.8,0.0161290322580645
