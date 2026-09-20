@@ -15,13 +15,19 @@ function S = setupSpaceRobotEnv(cfg)
 %     EE_ref, EE_vref              Referenz (From Workspace)
 %     robot_rbt, d_safe            Kollisionsmonitor
 %     tau_sat                      Saturation vor der Strecke
-%     robotP                       Massen, Traegheiten, Gelenkdaempfung
+%     robotP                       Massen, Traegheiten, Gelenkdaempfung (Inertia- und
+%                                  Visual-Bloecke, Impulsmonitor)
 %     rewardW, q_lim               Reward-Gewichte und Gelenkgrenzen (Parameter
 %                                  des Reward-Blocks; Abbruch bei Verletzung)
 %     q0, dq0                      Gelenk-Startzustand (von der ResetFcn je Episode gesetzt)
+%     obs_noise                    Messrauschen je Agentenschritt (Zeile) und
+%                                  Beobachtung (Spalte), Block 'obs noise'; nominal 0,
+%                                  bei noise.obs_std > 0 von der ResetFcn je Episode gesetzt
+%     tauDist                      aeusseres Gelenkmoment (Block 'joint disturbance')
 %
 %   Rueckgabe S mit Feldern:
-%     env, obsInfo, actInfo, Ts_agent, Ts, T, mdl, agentBlk, cfg
+%     env, obsInfo, actInfo, Ts_agent, Ts, T, mdl, agentBlk, cfg, noise
+%     (noise: Einstellungen fuer localResetFunction, siehe evaluateAgent)
 
     if nargin < 1 || isempty(cfg), cfg = struct(); end
     cfg = benchmarkConfig(cfg);
@@ -51,6 +57,12 @@ function S = setupSpaceRobotEnv(cfg)
     assignin('base','Ts_agent',Ts_agent);
 
     % ---- Roboterparameter und Reward-Gewichte ----
+    % m_*/I_* sind Gesamtwerte je Koerper (Impulsmonitor, Paper-Tabelle). Im
+    % Modell ist jeder Koerper auf zwei starr verbundene Bloecke mit gleichem
+    % Schwerpunkt verteilt, Inertia (*_body) und Solid 'Visual' (*_geo), im
+    % Verhaeltnis des urspruenglichen Modells: Basis 5:1, Glieder 1:1. Das
+    % aendert die Dynamik nicht, und die Werte sind exakt (30/6 = 5, 30-5 = 25,
+    % 0.2/2 = 0.1), sodass die Ergebnisse bitgleich zu benchmark_v2 bleiben.
     s = cfg.robot.param_scale;
     robotP = struct( ...
         'm_base',        s * cfg.robot.m_base, ...
@@ -58,6 +70,14 @@ function S = setupSpaceRobotEnv(cfg)
         'm_link',        s * cfg.robot.m_link, ...
         'I_link',        s * cfg.robot.I_link, ...
         'joint_damping', s * cfg.robot.joint_damping);
+    robotP.m_base_geo  = robotP.m_base / 6;
+    robotP.I_base_geo  = robotP.I_base / 6;
+    robotP.m_base_body = robotP.m_base - robotP.m_base_geo;
+    robotP.I_base_body = robotP.I_base - robotP.I_base_geo;
+    robotP.m_link_geo  = robotP.m_link / 2;
+    robotP.I_link_geo  = robotP.I_link / 2;
+    robotP.m_link_body = robotP.m_link - robotP.m_link_geo;
+    robotP.I_link_body = robotP.I_link - robotP.I_link_geo;
     assignin('base','robotP',robotP);
     rewardW   = cfg.reward;
     rewardW.N = floor(T/Ts_agent);          % Agentenschritte je Episode (Horizont der Terminalstrafe)
@@ -94,7 +114,9 @@ function S = setupSpaceRobotEnv(cfg)
         'StopTime',   num2str(T), ...
         'Solver',     'ode4', ...           % fester Integrator
         'FixedStep',  num2str(Ts), ...
-        'SolverType', 'Fixed-step');
+        'SolverType', 'Fixed-step', ...
+        'SimMechanicsOpenEditorOnUpdate', 'off');   % kein Mechanics Explorer
+        % (bremst, und im -batch-Betrieb stuerzte MATLAB im Explorer-Playback ab)
 
     agentBlk = [mdl '/RL_Agent'];
 
@@ -112,15 +134,25 @@ function S = setupSpaceRobotEnv(cfg)
         'LowerLimit', -cfg.tau_max*ones(nJ,1), ...
         'UpperLimit',  cfg.tau_max*ones(nJ,1));
 
+    % ---- Stoerungen (Stresstests, nominal aus) ----
+    % Nominal addieren beide Bloecke exakt 0 -> Ergebnisse bitgleich zum Modell
+    % ohne diese Bloecke. obs_noise hat eine Zeile je Aufruf des Blocks
+    % (t = 0, Ts_agent, ..., T).
+    noise = struct('obs_std', cfg.noise.obs_std, 'seed', cfg.noise.seed, ...
+                   'size', [rewardW.N + 1, numel(obsLow)]);
+    assignin('base','obs_noise', zeros(noise.size));
+    assignin('base','tauDist', struct('tau', cfg.dist.tau(:), ...
+        't_on', cfg.dist.t_on, 't_off', cfg.dist.t_off));
+
     % ---- RL-Umgebung ----
     env = rlSimulinkEnv(mdl, agentBlk, obsInfo, actInfo);
     initCfg = cfg.init;
-    env.ResetFcn = @(in) localResetFunction(in, initCfg);
+    env.ResetFcn = @(in) localResetFunction(in, initCfg, noise);
 
     % ---- Rueckgabe ----
     S = struct('env',env, 'obsInfo',obsInfo, 'actInfo',actInfo, ...
                'Ts_agent',Ts_agent, 'Ts',Ts, 'T',T, ...
-               'mdl',mdl, 'agentBlk',agentBlk, 'cfg',cfg);
+               'mdl',mdl, 'agentBlk',agentBlk, 'cfg',cfg, 'noise',noise);
 end
 
 function [EE_ref, EE_vref] = referenceTrajectory(cfg, t)

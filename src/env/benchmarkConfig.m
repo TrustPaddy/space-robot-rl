@@ -15,6 +15,10 @@ function cfg = benchmarkConfig(varargin)
 %   Ueberschreiben: Name-Wert-Paare mit Punkt-Notation fuer Unterfelder
 %   ('reward.wori', 400) oder ein Struct mit derselben Feldstruktur.
 
+    % Bedeutung der Felder. Aeltere gespeicherte cfg (Agentendateien) vor dem
+    % Verwenden mit upgradeConfig umrechnen.
+    cfg.version  = 2;
+
     % ---- Zeit ----
     cfg.T        = 8.5;       % Episodendauer [s]
     cfg.Ts       = 0.01;      % Solver-Schrittweite (fixed-step, ode4) [s]
@@ -35,13 +39,32 @@ function cfg = benchmarkConfig(varargin)
     cfg.qi_lim_deg    = [-170 170];   % Gelenke 2-4
 
     % ---- Roboterparameter (Simscape-Modell, identisch zu SpaceRobot.urdf) ----
-    cfg.robot.m_base        = 25;          % Basis [kg]
-    cfg.robot.I_base        = [5 5 5];     % Basis-Haupttraegheitsmomente [kg*m^2]
-    cfg.robot.m_link        = 1;           % je Armglied [kg]
-    cfg.robot.I_link        = [0.1 0.1 0.1];
+    % Gesamtwerte je Koerper. Im Modell tragen je Koerper zwei Bloecke Masse,
+    % der Inertia-Block und der Solid-Block 'Visual' aus dem URDF-Import
+    % (bis 19.09.2026 nicht bekannt: 25 + 5 kg bzw. 1 + 1 kg). Die Aufteilung
+    % macht setupSpaceRobotEnv, siehe dort.
+    cfg.robot.m_base        = 30;          % Basis [kg]
+    cfg.robot.I_base        = [6 6 6];     % Basis-Haupttraegheitsmomente [kg*m^2]
+    cfg.robot.m_link        = 2;           % je Armglied [kg], Schwerpunkt in Gliedmitte
+    cfg.robot.I_link        = [0.2 0.2 0.2];   % je Armglied, um den Schwerpunkt
     cfg.robot.joint_damping = 1.5;         % viskose Gelenkdaempfung [N*m*s/rad]
     cfg.robot.param_scale   = 1.0;         % Stresstest "parameter uncertainty":
                                            % skaliert Massen, Traegheiten, Daempfung
+
+    % ---- Stoerungen (Stresstests; nominal aus) ----
+    % Messrauschen: auf jede der 23 Beobachtungen, die der Agent sieht, wird je
+    % Agentenschritt N(0, obs_std^2) addiert (in der Einheit des Kanals). Reward
+    % und KPIs verwenden die ungestoerten Signale. Neue Folge je Episode; in der
+    % Auswertung aus RandStream(seed), Substream = Episode (gleich fuer alle
+    % Agenten), im Training aus dem globalen RNG.
+    cfg.noise.obs_std = 0;             % z. B. 0.005
+    cfg.noise.seed    = 2026;
+    % Aeusseres Gelenkmoment: wird im Zeitfenster t_on <= t < t_off zum Moment
+    % des Agenten addiert (nach der Saturation, wirkt also auch bei |tau| = tau_max).
+    % Reward, K8 und K9 sehen nur das Moment des Agenten.
+    cfg.dist.tau   = zeros(4,1);       % [N*m] je Gelenk, z. B. [2; 2; 0; 0]
+    cfg.dist.t_on  = 2.0;              % [s]
+    cfg.dist.t_off = 2.5;              % [s]
 
     % ---- Reward (Gl. 1-4 und Tab. 3 im Paper) ----
     cfg.reward.wp    = 150;    % EE-Position

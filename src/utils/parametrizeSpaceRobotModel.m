@@ -9,21 +9,35 @@ function parametrizeSpaceRobotModel(mdl)
 %   Hand geaendert (z. B. W_ori 200 -> 2000, Basis 5 -> 25 kg). Dadurch liessen
 %   sich alte Ergebnisse nicht mehr reproduzieren. Nach der Migration liest das
 %   Modell diese Werte aus dem Workspace, gesetzt von setupSpaceRobotEnv:
-%     robotP.*   Inertia-Bloecke (base_link, link1-4) und Gelenkdaempfung
+%     robotP.*   Inertia- und Visual-Bloecke (base_link, link1-4), Gelenkdaempfung
 %     q0, dq0    Positions-/Geschwindigkeits-Targets der vier Gelenke
 %     tau_sat    Saturation vor der Strecke
 %     rewardW.*  Gewichte und Konstanten im Reward-Block (Parameter-Daten)
 %     q_lim      Gelenkgrenzen [rad] (4x2) fuer den Episodenabbruch
+%     robotP.*   auch im Impulsmonitor (vorher fest 5 kg Basismasse, A27)
+%     obs_noise  Messrauschen auf der Beobachtung (Block 'obs noise')
+%     tauDist    aeusseres Gelenkmoment (Block 'joint disturbance')
+%   Nominal (obs_noise = 0, tauDist.tau = 0) addieren die beiden neuen Bloecke
+%   exakt 0, die Ergebnisse bleiben bitgleich zum Modell ohne sie.
 
     if nargin < 1, mdl = 'SpaceRobot'; end
     load_system(mdl);
 
     % ---- 1) Massen und Traegheiten ----
+    % Auch die Solid-Bloecke 'Visual' aus dem URDF-Import tragen Masse (fest
+    % 5 kg / [1 1 1] an der Basis, 1 kg / [0.1 0.1 0.1] je Glied). Die
+    % simulierten Koerper hatten also 30 kg bzw. 2 kg, nicht 25 kg bzw. 1 kg,
+    % und param_scale skalierte nur einen Teil. Jetzt kommen beide Bloecke aus
+    % robotP (Aufteilung der Gesamtwerte in setupSpaceRobotEnv).
     set_param([mdl '/Robot/base_link/Inertia'], ...
-        'Mass', 'robotP.m_base', 'MomentsOfInertia', 'robotP.I_base');
+        'Mass', 'robotP.m_base_body', 'MomentsOfInertia', 'robotP.I_base_body');
+    set_param([mdl '/Robot/base_link/Visual'], 'InertiaType', 'Custom', ...
+        'Mass', 'robotP.m_base_geo', 'MomentsOfInertia', 'robotP.I_base_geo');
     for i = 1:4
         set_param(sprintf('%s/Robot/link%d/Inertia', mdl, i), ...
-            'Mass', 'robotP.m_link', 'MomentsOfInertia', 'robotP.I_link');
+            'Mass', 'robotP.m_link_body', 'MomentsOfInertia', 'robotP.I_link_body');
+        set_param(sprintf('%s/Robot/link%d/Visual', mdl, i), 'InertiaType', 'Custom', ...
+            'Mass', 'robotP.m_link_geo', 'MomentsOfInertia', 'robotP.I_link_geo');
     end
 
     % ---- 2) Gelenke: Daempfung und Startzustand ----
@@ -70,6 +84,72 @@ function parametrizeSpaceRobotModel(mdl)
     % (Kollisionsmonitor) und q (Robot) und beendet die Episode mit rfail.
     addRewardInput(mdl, 'isColl', 'collision monitor/1');
     addRewardInput(mdl, 'q',      'Robot/1');
+
+    % ---- 7) Impulsmonitor: Massen aus robotP (A27) ----
+    % totalMomentum rechnete mit fest eingetragenen Massen [5 1 1 1 1] kg
+    % (simuliert: 30 kg Basis, 2 kg je Glied). Jetzt die Gesamtmassen aus
+    % robotP. p_tot wird zusaetzlich geloggt (vorher nur Scope).
+    ch = findChart(mdl, 'totalMomentum');
+    newM = 'm = [robotP.m_base; robotP.m_link*ones(4,1)];   % Gesamtmasse je Koerper (robotP)';
+    s = regexprep(ch.Script, 'm = \[[^\]\n]*\];[^\n]*', newM, 'once');
+    if ~contains(s, newM)
+        error('parametrizeSpaceRobotModel:momentum', 'Massenzeile im Impulsmonitor nicht gefunden.');
+    end
+    if ~strcmp(s, ch.Script), ch.Script = s; end
+    in = cell(1, 15);
+    for i = 1:5
+        in(3*i-2:3*i) = {sprintf('v%d', i), sprintf('w%d', i), sprintf('q%d', i)};
+    end
+    reconcileData(ch, in, {'p_tot'}, {'robotP'});
+    ph = get_param([mdl '/Robot/Impuls Monitor/MATLAB Function'], 'PortHandles');
+    set_param(ph.Outport(1), 'DataLogging', 'on', ...
+        'DataLoggingNameMode', 'Custom', 'DataLoggingName', 'p_tot');
+
+    % ---- 8) Messrauschen auf der Beobachtung (Stresstest) ----
+    % Zwischen 'Rate Transition1' (Agententakt) und RL_Agent: y = u + Zeile k
+    % von obs_noise im k-ten Agentenschritt. Reward und KPIs bleiben ungestoert.
+    % Erst Code setzen (legt die Ports an), dann verdrahten.
+    blk = [mdl '/obs noise'];
+    isNew = getSimulinkBlockHandle(blk) == -1;
+    if isNew
+        rt1 = [mdl '/Rate Transition1'];
+        set_param(rt1, 'Position', get_param(rt1, 'Position') + [80 0 80 0]);
+        add_block('simulink/User-Defined Functions/MATLAB Function', blk, ...
+            'Position', [895 353 955 377], 'Orientation', get_param(rt1, 'Orientation'));
+    end
+    ch = chartOf(blk);
+    ch.Script = obsNoiseScript();
+    reconcileData(ch, {'u'}, {'y'}, {'obs_noise'});
+    set_param(blk, 'SystemSampleTime', 'Ts_agent');
+    if isNew
+        delete_line(mdl, 'Rate Transition1/1', 'RL_Agent/1');
+        add_line(mdl, 'Rate Transition1/1', 'obs noise/1', 'autorouting', 'on');
+        add_line(mdl, 'obs noise/1', 'RL_Agent/1', 'autorouting', 'on');
+    end
+
+    % ---- 9) Aeusseres Gelenkmoment (Stresstest) ----
+    % Zwischen 'Rate Transition' (Moment des Agenten, Takt Ts) und Robot:
+    % tau_robot = tau + tauDist.tau fuer tauDist.t_on <= t < tauDist.t_off.
+    % Reward, Unit Delay und das geloggte tau sehen weiter nur das Agentenmoment.
+    blk = [mdl '/joint disturbance'];
+    clk = [mdl '/Digital Clock'];
+    isNew = getSimulinkBlockHandle(blk) == -1;
+    if isNew
+        add_block('simulink/Sources/Digital Clock', clk, ...
+            'SampleTime', 'Ts', 'Position', [255 205 285 225]);
+        add_block('simulink/User-Defined Functions/MATLAB Function', blk, ...
+            'Position', [320 175 380 215]);
+    end
+    ch = chartOf(blk);
+    ch.Script = jointDisturbanceScript();
+    reconcileData(ch, {'tau', 't'}, {'tau_out'}, {'tauDist'});
+    set_param(blk, 'SystemSampleTime', 'Ts');
+    if isNew
+        delete_line(mdl, 'Rate Transition/1', 'Robot/1');
+        add_line(mdl, 'Rate Transition/1', 'joint disturbance/1', 'autorouting', 'on');
+        add_line(mdl, 'Digital Clock/1',   'joint disturbance/2', 'autorouting', 'on');
+        add_line(mdl, 'joint disturbance/1', 'Robot/1', 'autorouting', 'on');
+    end
 
     save_system(mdl);
     fprintf('[parametrizeSpaceRobotModel] %s migriert und gespeichert.\n', mdl);
@@ -183,14 +263,58 @@ function trySet(blk, name, value)
 end
 
 function ch = findRewardChart(mdl)
+    ch = findChart(mdl, 'rewardFcn');
+end
+
+function ch = findChart(mdl, fcnName)
+% MATLAB-Function-Block, dessen Code die Funktion fcnName enthaelt.
     m = sfroot().find('-isa', 'Simulink.BlockDiagram', 'Name', mdl);
     charts = m.find('-isa', 'Stateflow.EMChart');
-    hit = arrayfun(@(c) contains(c.Script, 'rewardFcn'), charts);
+    hit = arrayfun(@(c) contains(c.Script, fcnName), charts);
     if nnz(hit) ~= 1
-        error('parametrizeSpaceRobotModel:reward', ...
-            'Reward-Block nicht eindeutig gefunden (%d Treffer).', nnz(hit));
+        error('parametrizeSpaceRobotModel:chart', ...
+            'Block mit "%s" nicht eindeutig gefunden (%d Treffer).', fcnName, nnz(hit));
     end
     ch = charts(hit);
+end
+
+function ch = chartOf(blk)
+% Stateflow-Objekt des MATLAB-Function-Blocks blk (voller Pfad).
+    ch = sfroot().find('-isa', 'Stateflow.EMChart', 'Path', blk);
+    if numel(ch) ~= 1
+        error('parametrizeSpaceRobotModel:chart', 'Kein MATLAB-Function-Block %s.', blk);
+    end
+end
+
+function s = obsNoiseScript()
+    L = {
+    'function y = addObsNoise(u)'
+    '    % Messrauschen auf der Beobachtung (Stresstest). Im k-ten Agentenschritt'
+    '    % wird Zeile k des Parameters obs_noise addiert (gesetzt von'
+    '    % localResetFunction). Nominal ist obs_noise = 0, dann gilt y = u.'
+    '    persistent k;'
+    '    if isempty(k), k = 0; end'
+    '    k = k + 1;'
+    '    y = u;'
+    '    y(:) = u(:) + obs_noise(min(k, size(obs_noise, 1)), :).'';'
+    'end'
+    };
+    s = strjoin(L, newline);
+end
+
+function s = jointDisturbanceScript()
+    L = {
+    'function tau_out = addJointDisturbance(tau, t)'
+    '    % Aeusseres Gelenkmoment (Stresstest): tauDist.tau [N*m] je Gelenk wird im'
+    '    % Zeitfenster tauDist.t_on <= t < tauDist.t_off addiert. Nominal ist'
+    '    % tauDist.tau = 0, dann gilt tau_out = tau.'
+    '    tau_out = tau;'
+    '    if t >= tauDist.t_on && t < tauDist.t_off'
+    '        tau_out(:) = tau(:) + tauDist.tau(:);'
+    '    end'
+    'end'
+    };
+    s = strjoin(L, newline);
 end
 
 function s = rewardScript()

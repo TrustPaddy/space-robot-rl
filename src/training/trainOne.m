@@ -16,6 +16,9 @@ function outFile = trainOne(agentType, mode, seed, opt)
 %     cfg, meta (Git-Commit, Modell-Pruefsumme, MATLAB-Version),
 %     wallclock [s], agentType, mode, seed.
 %   Zusaetzlich eine Zeile in <OutRoot>/<Campaign>/runs.csv.
+%   Fortschritt waehrend des Trainings: eine Zeile je Episode in
+%   <OutRoot>/<Campaign>/progress/<AGENT>_<mode>_s<seed>.csv (progressLogger),
+%   Uebersicht mit campaignStatus(<Campaign>).
 
     arguments
         agentType (1,1) string
@@ -47,9 +50,14 @@ function outFile = trainOne(agentType, mode, seed, opt)
         Verbose                    = false, ...
         UseParallel                = false);
 
+    runName = sprintf('%s_%s_s%d', agentType, mode, seed);
+    logger = progressLogger(fullfile(opt.OutRoot, opt.Campaign, 'progress', runName + ".csv"), ...
+                            cfg.train.maxEpisodes);
+
     t0 = tic;
-    result = train(agent, S.env, trainOpts);
+    result = train(agent, S.env, trainOpts, Logger=logger);
     wallclock = toc(t0);
+    [~] = rmdir(logger.LoggingOptions.LoggingDirectory, 's');   % nur Logger-Metadaten
 
     stats = struct( ...
         'EpisodeReward', result.EpisodeReward(:), ...
@@ -60,7 +68,7 @@ function outFile = trainOne(agentType, mode, seed, opt)
 
     outDir = fullfile(opt.OutRoot, opt.Campaign, 'agents');
     if ~exist(outDir, 'dir'), mkdir(outDir); end
-    outFile = fullfile(outDir, sprintf('%s_%s_s%d.mat', agentType, mode, seed));
+    outFile = fullfile(outDir, runName + ".mat");
     save(outFile, 'agent', 'stats', 'cfg', 'meta', 'wallclock', 'agentType', 'mode', 'seed');
 
     if opt.LogRun

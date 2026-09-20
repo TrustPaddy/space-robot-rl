@@ -11,6 +11,9 @@ function T = evaluateAgent(agentFile, Q, opt)
 %   den stochastischen Agenten PPO, TRPO, PG und SAC. Grundlage ist die
 %   Trainingskonfiguration aus der Agentendatei; Config ueberschreibt
 %   einzelne Werte (Stresstests, andere Trajektorie).
+%   Messrauschen (Config.noise.obs_std > 0): Episode k bekommt ihre Folge aus
+%   RandStream('mrg32k3a', Seed = cfg.noise.seed) mit Substream k, also
+%   dieselbe Folge fuer alle Agenten und unabhaengig vom globalen RNG.
 %
 %   T : eine Zeile je Episode mit agent, mode, seed, condition, episode,
 %       q0 [deg], steps, terminated und K1..K9 (computeKPIsFromLogs; bei
@@ -30,7 +33,7 @@ function T = evaluateAgent(agentFile, Q, opt)
     end
 
     L = load(agentFile, 'agent', 'cfg', 'agentType', 'mode', 'seed');
-    cfg = benchmarkConfig(L.cfg, opt.Config);
+    cfg = benchmarkConfig(upgradeConfig(L.cfg), opt.Config);
     S = setupSpaceRobotEnv(cfg);
 
     agent = L.agent;
@@ -38,7 +41,7 @@ function T = evaluateAgent(agentFile, Q, opt)
 
     N = size(Q, 2);
     counter = containers.Map({'k'}, {0});          % Handle-Objekt: zaehlt Episoden
-    S.env.ResetFcn = @(in) evalReset(in, Q, counter);
+    S.env.ResetFcn = @(in) evalReset(in, Q, counter, S.noise);
     xp = sim(S.env, agent, rlSimulationOptions( ...
         MaxSteps = floor(cfg.T / cfg.Ts_agent), NumSimulations = N));
 
@@ -74,8 +77,14 @@ function T = evaluateAgent(agentFile, Q, opt)
     end
 end
 
-function in = evalReset(in, Q, counter)
+function in = evalReset(in, Q, counter, noise)
     k = counter('k') + 1;
     counter('k') = k;
-    in = localResetFunction(in, struct('q0', Q(:, k), 'randomize', false, 'range_deg', 0));
+    stream = [];
+    if noise.obs_std > 0
+        stream = RandStream('mrg32k3a', 'Seed', noise.seed);
+        stream.Substream = k;
+    end
+    in = localResetFunction(in, struct('q0', Q(:, k), 'randomize', false, 'range_deg', 0), ...
+                            noise, stream);
 end
