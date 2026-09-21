@@ -14,6 +14,7 @@ codegen/
 *.autosave
 *.mex*
 *_UnitCheck.xlsx
+matlab_crash_dump.*
 
 # Automatische Sicherungskopien, die Simulink beim Speichern in einem
 # neueren Release anlegt (z. B. SpaceRobot.slx.r2025b)
@@ -23,19 +24,34 @@ codegen/
 # Manuelle Modell-Backups: Versionsstaende gehoeren ab jetzt in Git
 backup/
 
+# Ungenutzte Skripte (SPART-Tutorials, altes getRobotCol.m); stehen in der
+# Git-Historie, falls sie noch einmal gebraucht werden
+legacy/
+
 # =====================================================================
 #  Ergebnisse
 # =====================================================================
-# Agenten, die Trainingsskripte direkt im Projekt-Root ablegen
-# (z. B. SpaceRobot_PPO_agent.mat) -> Ergebnisse gehoeren nach results/
+# Agenten und Workspaces, die Skripte direkt im Projekt-Root ablegen
+# (z. B. SpaceRobot_PPO_agent.mat, matlab_workspace.mat) -> Ergebnisse
+# gehoeren nach results/
 /*.mat
 
-# Neue Messkampagnen (Benchmark v2):
-#   results/<kampagne>/agents/  -> versioniert (klein, fuer Reproduzierbarkeit)
-#   results/<kampagne>/*.csv    -> versioniert (KPI-Tabellen fuer das Paper)
-#   results/<kampagne>/logs/    -> NICHT versioniert (grosse Simulations-Logs)
+# Ausgaben, die entstehen, wenn ein Skript mit relativem Pfad aus src/
+# heraus gestartet wird (z. B. src/SavedAgents/...)
+src/**/SavedAgents/
+src/**/results/
+
+# Messkampagnen (results/<kampagne>/):
+#   agents/, eval/, analysis/, runs.csv, campaign.mat -> versioniert
+#   progress/  -> NICHT versioniert (nur Fortschrittsanzeige waehrend des
+#                 Trainings; der Reward je Episode steht auch in agents/*.mat)
+#   logs/      -> NICHT versioniert (grosse Simulations-Logs)
+results/**/progress/
 results/**/logs/
 results/**/logsouts*.mat
+
+# Testlaeufe (Beispiel im README: trainOne(..., Campaign="test"))
+results/test/
 
 # Ausgabeordner von src/kpi/calculate_kpi_statistik.m (enthaelt logsouts)
 EvaluationResults/
@@ -45,8 +61,14 @@ EvaluationResults/
 SavedAgents/**/bo_state.mat
 SavedAgents/**/results.mat
 
+# =====================================================================
+#  Abbildungen
+# =====================================================================
 # Videos (zu gross fuer Git; bei Bedarf extern ablegen)
 Figures/videos/
+
+# Probeausgabe von makeFigures (Beispiel im README)
+Figures/new/
 
 # =====================================================================
 #  Betriebssystem / Editor
@@ -55,4 +77,6 @@ Thumbs.db
 desktop.ini
 .DS_Store
 ~$*
+*~
+*.bak
 .claude/settings.local.json
