@@ -15,9 +15,9 @@ function T = analyzeVariants(campaigns, labels, opt)
 %   Seeds = 0:4 wird die Referenz auf dieselben Seeds eingeschraenkt.
 %
 %   Ergebnis T: eine Zeile je Variante und Konfiguration mit nRuns, nSuccess,
-%   abortRate, Mittelwert, Standardabweichung und Median von K1, K2 und K4
-%   sowie der mittleren Trainingsdauer T2. Mit OutFile zusaetzlich als CSV und
-%   als LaTeX-Tabelle.
+%   abortRate sowie Mittelwert, Standardabweichung und Median von K1-K9, T1 und
+%   T2 ueber die erfolgreichen Laeufe. Mit OutFile zusaetzlich als CSV und als
+%   LaTeX-Tabelle.
 
     arguments
         campaigns (1,:) string
@@ -57,12 +57,11 @@ function T = analyzeVariants(campaigns, labels, opt)
         row = table(key.variant(i), key.config(i), height(r), height(s), ...
             sum(r.nAbort) / sum(r.nEpisodes), ...
             'VariableNames', {'variant','config','nRuns','nSuccess','abortRate'});
-        for k = ["K1","K2","K4"]
+        for k = ["K" + (1:9), "T1", "T2"]
             row.(k + "_mean")   = meanOrNaN(s.(k));
             row.(k + "_std")    = stdOrNaN(s.(k));
             row.(k + "_median") = medianOrNaN(s.(k));
         end
-        row.T2_mean = meanOrNaN(s.T2);
         T = [T; row]; %#ok<AGROW>
     end
 
