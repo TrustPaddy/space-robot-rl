@@ -1,0 +1,14 @@
+% analyzeBenchmark.m, Bedingung tau_sat_075: nur erfolgreiche Laeufe
+\begin{tabular}{lcccc}
+\toprule
+Configuration & Successful runs & $K_2$ & $K_4$ & $T_2$ [min] \\
+\midrule
+PPO optimized & 10 & 0.004148 $\pm$ 0.00232 & 0.0211 $\pm$ 0.016 & 9.2 \\
+PPO default & 3 & 0.01434 $\pm$ 0.00784 & 0.0465 $\pm$ 0.015 & 8.4 \\
+TRPO default & 10 & 0.01454 $\pm$ 0.0196 & 0.0263 $\pm$ 0.0092 & 11.3 \\
+PG default & 2 & 0.01767 $\pm$ 0.00357 & 0.0303 $\pm$ 0.011 & 6.9 \\
+TD3 default & 6 & 0.09371 $\pm$ 0.0569 & 0.117 $\pm$ 0.082 & 29.4 \\
+DDPG default & 5 & 0.1829 $\pm$ 0.097 & 0.368 $\pm$ 0.13 & 24.2 \\
+SAC default & 6 & 0.2136 $\pm$ 0.115 & 0.138 $\pm$ 0.09 & 35.2 \\
+\bottomrule
+\end{tabular}

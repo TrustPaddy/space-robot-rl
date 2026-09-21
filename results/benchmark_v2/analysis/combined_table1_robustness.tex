@@ -1,0 +1,14 @@
+% analyzeBenchmark.m, Bedingung combined: Robustheit ueber alle Laeufe
+\begin{tabular}{lccc}
+\toprule
+Configuration & Successful runs & Abort rate & Aborts by collision \\
+\midrule
+PPO optimized & 10/10 & 0.0\% & 0\% \\
+TRPO default & 10/10 & 0.0\% & 0\% \\
+TD3 default & 7/10 & 30.0\% & 0\% \\
+SAC default & 6/10 & 40.0\% & 0\% \\
+DDPG default & 5/10 & 41.9\% & 27\% \\
+PPO default & 4/10 & 60.0\% & 17\% \\
+PG default & 2/10 & 80.0\% & 12\% \\
+\bottomrule
+\end{tabular}

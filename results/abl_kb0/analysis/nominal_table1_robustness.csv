@@ -1,0 +1,2 @@
+config,nRuns,nSuccess,successRate,nEpisodes,nAbort,abortRate,abortCollisionShare
+PPO_optimized,5,5,1,155,0,0,0

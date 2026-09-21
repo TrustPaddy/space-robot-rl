@@ -1,0 +1,14 @@
+% analyzeBenchmark.m, Bedingung disturbance: nur erfolgreiche Laeufe
+\begin{tabular}{lcccc}
+\toprule
+Configuration & Successful runs & $K_2$ & $K_4$ & $T_2$ [min] \\
+\midrule
+PPO optimized & 10 & 0.005061 $\pm$ 0.00278 & 0.0545 $\pm$ 0.023 & 9.2 \\
+PG default & 2 & 0.009904 $\pm$ 0.000683 & 0.0782 $\pm$ 0.042 & 6.9 \\
+TRPO default & 10 & 0.01289 $\pm$ 0.0145 & 0.0662 $\pm$ 0.024 & 11.3 \\
+PPO default & 3 & 0.01475 $\pm$ 0.0062 & 0.0653 $\pm$ 0.019 & 8.4 \\
+TD3 default & 4 & 0.08812 $\pm$ 0.0856 & 0.136 $\pm$ 0.059 & 29.7 \\
+DDPG default & 2 & 0.0883 $\pm$ 0.000165 & 0.278 $\pm$ 0.006 & 24.4 \\
+SAC default & 5 & 0.2912 $\pm$ 0.23 & 0.213 $\pm$ 0.18 & 35.3 \\
+\bottomrule
+\end{tabular}

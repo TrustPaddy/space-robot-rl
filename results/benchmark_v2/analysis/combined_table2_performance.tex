@@ -1,0 +1,14 @@
+% analyzeBenchmark.m, Bedingung combined: nur erfolgreiche Laeufe
+\begin{tabular}{lcccc}
+\toprule
+Configuration & Successful runs & $K_2$ & $K_4$ & $T_2$ [min] \\
+\midrule
+PPO optimized & 10 & 0.01434 $\pm$ 0.00597 & 0.0488 $\pm$ 0.02 & 9.2 \\
+TRPO default & 10 & 0.0279 $\pm$ 0.0227 & 0.0581 $\pm$ 0.021 & 11.3 \\
+PPO default & 4 & 0.02865 $\pm$ 0.0146 & 0.061 $\pm$ 0.024 & 8.5 \\
+PG default & 2 & 0.03155 $\pm$ 0.0111 & 0.0659 $\pm$ 0.03 & 6.9 \\
+TD3 default & 7 & 0.1474 $\pm$ 0.173 & 0.137 $\pm$ 0.11 & 29.5 \\
+DDPG default & 5 & 0.1546 $\pm$ 0.0848 & 0.289 $\pm$ 0.088 & 24.3 \\
+SAC default & 6 & 0.2217 $\pm$ 0.143 & 0.161 $\pm$ 0.11 & 35.2 \\
+\bottomrule
+\end{tabular}

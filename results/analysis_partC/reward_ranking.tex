@@ -1,0 +1,22 @@
+% analyzeVariants.m, Bedingung nominal: KPIs nur ueber erfolgreiche Laeufe
+\begin{tabular}{llccc}
+\toprule
+Variant & Agent & Successful runs & $K_2$ & $K_4$ \\
+\midrule
+nominal weights & PPO default & 2/5 & 0.01597 $\pm$ 0.00955 & 0.04384 $\pm$ 0.0143 \\
+nominal weights & SAC default & 3/5 & 0.2188 $\pm$ 0.166 & 0.06747 $\pm$ 0.0506 \\
+nominal weights & TRPO default & 5/5 & 0.007781 $\pm$ 0.00759 & 0.02327 $\pm$ 0.00539 \\
+W_ori x0.5 & PPO default & 1/5 & 0.06734 & 0.06747 \\
+W_ori x0.5 & SAC default & 2/5 & 0.1752 $\pm$ 0.0128 & 0.1589 $\pm$ 0.0811 \\
+W_ori x0.5 & TRPO default & 5/5 & 0.004517 $\pm$ 0.000799 & 0.03781 $\pm$ 0.0256 \\
+W_ori x2 & PPO default & 1/5 & 0.06142 & 0.04512 \\
+W_ori x2 & SAC default & 3/5 & 0.2457 $\pm$ 0.168 & 0.1289 $\pm$ 0.123 \\
+W_ori x2 & TRPO default & 5/5 & 0.03069 $\pm$ 0.0435 & 0.02731 $\pm$ 0.0161 \\
+W_p x0.5 & PPO default & 0/5 & -- & -- \\
+W_p x0.5 & SAC default & 2/5 & 0.448 $\pm$ 0.261 & 0.3018 $\pm$ 0.178 \\
+W_p x0.5 & TRPO default & 5/5 & 0.01804 $\pm$ 0.0105 & 0.0278 $\pm$ 0.0117 \\
+W_p x2 & PPO default & 2/5 & 0.07217 $\pm$ 0.0686 & 0.05809 $\pm$ 0.015 \\
+W_p x2 & SAC default & 1/5 & 0.146 & 0.05162 \\
+W_p x2 & TRPO default & 5/5 & 0.01019 $\pm$ 0.014 & 0.03822 $\pm$ 0.0157 \\
+\bottomrule
+\end{tabular}

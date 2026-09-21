@@ -16,13 +16,13 @@ function R = analyzeBenchmark(campaign, opt)
 %     Tabelle 1 (Robustheit, ALLE Laeufe): erfolgreiche Laeufe, Abbruchrate
 %       ueber alle Auswertungsepisoden, Anteil der Abbrueche durch Kollision.
 %     Tabelle 2 (Performance, NUR erfolgreiche Laeufe): je KPI Mittelwert und
-%       Standardabweichung ueber die erfolgreichen Laeufe, dazu T1 und T3.
+%       Standardabweichung ueber die erfolgreichen Laeufe, dazu T1 und T2.
 %       Die Werte sind also bedingt auf einen erfolgreichen Lauf.
 %
 %   Aggregation je Lauf: Mittel ueber die zufaelligen Startzustaende, K3 als
 %   Maximum, K5 als Anteil der Episoden mit Kollision. T1 ist die
 %   Standardabweichung des Episodenrewards in den letzten 100 Trainingsepisoden,
-%   T3 die Trainingsdauer [min].
+%   T2 die Trainingsdauer [min].
 %
 %   Tests (nur Konfigurationen mit mindestens MinSuccess erfolgreichen Laeufen):
 %     - KPIs: zweiseitiger Mann-Whitney-U-Test auf Seed-Ebene gegen Baseline,
@@ -75,7 +75,7 @@ function R = analyzeBenchmark(campaign, opt)
     t1 = sortrows(t1, {'nSuccess','abortRate'}, {'descend','ascend'});
 
     % ---------- Tabelle 2: Performance der erfolgreichen Laeufe ----------
-    cols = [kpis, "T1", "T3"];
+    cols = [kpis, "T1", "T2"];
     t2 = table(configs, zeros(n,1), 'VariableNames', {'config','nSuccess'});
     for c = cols
         [m, s] = deal(nan(n,1));
@@ -100,7 +100,7 @@ function R = analyzeBenchmark(campaign, opt)
     pre = @(name) fullfile(outDir, opt.Condition + "_" + name);
     writetable(runs, pre('runs.csv'));
     writetable(t1,   pre('table1_robustness.csv'));
-    writetable(t2(:, {'config','nSuccess','K2_mean','K2_std','K4_mean','K4_std','T3_mean','T3_std'}), ...
+    writetable(t2(:, {'config','nSuccess','K2_mean','K2_std','K4_mean','K4_std','T2_mean','T2_std'}), ...
                pre('table2_performance.csv'));
     writetable(t2,   pre('table2_full.csv'));
     writetable(tests,  pre('tests_kpi.csv'));
@@ -141,10 +141,10 @@ function runs = runLevel(E, kpis)
 end
 
 function tr = trainingStats(campDir)
-% T1 (Streuung des Rewards in den letzten 100 Episoden) und T3 (Dauer [min]).
+% T1 (Streuung des Rewards in den letzten 100 Episoden) und T2 (Dauer [min]).
     files = dir(fullfile(campDir, 'agents', '*.mat'));
     tr = table(strings(0,1), zeros(0,1), zeros(0,1), zeros(0,1), ...
-               'VariableNames', {'config','seed','T1','T3'});
+               'VariableNames', {'config','seed','T1','T2'});
     for i = 1:numel(files)
         L = load(fullfile(files(i).folder, files(i).name), 'stats', 'wallclock', 'agentType', 'mode', 'seed');
         er = L.stats.EpisodeReward;
@@ -227,14 +227,14 @@ function writeTable2Tex(f, t2, cond)
     c = onCleanup(@() fclose(fid));
     fprintf(fid, '%% analyzeBenchmark.m, Bedingung %s: nur erfolgreiche Laeufe\n', cond);
     fprintf(fid, '\\begin{tabular}{lcccc}\n\\toprule\n');
-    fprintf(fid, 'Configuration & Successful runs & $K_2$ & $K_4$ & $T_3$ [min] \\\\\n\\midrule\n');
+    fprintf(fid, 'Configuration & Successful runs & $K_2$ & $K_4$ & $T_2$ [min] \\\\\n\\midrule\n');
     for i = 1:height(t2)
         if t2.nSuccess(i) == 0
             fprintf(fid, '%s & 0 & -- & -- & -- \\\\\n', pretty(t2.config(i)));
             continue;
         end
         fprintf(fid, '%s & %d & %s & %s & %.1f \\\\\n', pretty(t2.config(i)), t2.nSuccess(i), ...
-            pm(t2.K2_mean(i), t2.K2_std(i), 4), pm(t2.K4_mean(i), t2.K4_std(i), 3), t2.T3_mean(i));
+            pm(t2.K2_mean(i), t2.K2_std(i), 4), pm(t2.K4_mean(i), t2.K4_std(i), 3), t2.T2_mean(i));
     end
     fprintf(fid, '\\bottomrule\n\\end{tabular}\n');
 end

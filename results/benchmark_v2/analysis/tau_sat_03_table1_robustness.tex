@@ -1,0 +1,14 @@
+% analyzeBenchmark.m, Bedingung tau_sat_03: Robustheit ueber alle Laeufe
+\begin{tabular}{lccc}
+\toprule
+Configuration & Successful runs & Abort rate & Aborts by collision \\
+\midrule
+PPO optimized & 10/10 & 0.0\% & 0\% \\
+TRPO default & 10/10 & 0.0\% & 0\% \\
+TD3 default & 9/10 & 10.0\% & 0\% \\
+SAC default & 8/10 & 20.0\% & 0\% \\
+DDPG default & 7/10 & 25.5\% & 39\% \\
+PPO default & 5/10 & 50.0\% & 20\% \\
+PG default & 2/10 & 80.0\% & 0\% \\
+\bottomrule
+\end{tabular}

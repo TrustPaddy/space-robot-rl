@@ -1,0 +1,14 @@
+% analyzeBenchmark.m, Bedingung noise: Robustheit ueber alle Laeufe
+\begin{tabular}{lccc}
+\toprule
+Configuration & Successful runs & Abort rate & Aborts by collision \\
+\midrule
+PPO optimized & 10/10 & 0.0\% & 0\% \\
+TRPO default & 10/10 & 0.0\% & 0\% \\
+SAC default & 6/10 & 40.0\% & 0\% \\
+TD3 default & 5/10 & 48.1\% & 25\% \\
+DDPG default & 3/10 & 51.9\% & 23\% \\
+PPO default & 3/10 & 69.7\% & 14\% \\
+PG default & 2/10 & 80.0\% & 2\% \\
+\bottomrule
+\end{tabular}
