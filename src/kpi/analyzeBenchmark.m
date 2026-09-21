@@ -39,12 +39,18 @@ function R = analyzeBenchmark(campaign, opt)
         opt.Condition  (1,1) string = "nominal"
         opt.Baseline   (1,1) string = "TRPO_default"
         opt.MinSuccess (1,1) double {mustBeInteger, mustBePositive} = 4
+        opt.Configs    (1,:) string = string.empty   % Auswahl, z. B. nur die Default-Agenten
+        opt.Tag        (1,1) string = ""             % Zusatz im Dateinamen, z. B. "defaults"
         opt.OutRoot    (1,1) string = string(fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))), 'results'))
     end
 
     campDir = fullfile(opt.OutRoot, campaign);
     E = readtable(fullfile(campDir, 'eval', opt.Condition + ".csv"), 'TextType', 'string');
     E.config = E.agent + "_" + E.mode;
+    if ~isempty(opt.Configs)
+        % Die Holm-Korrektur umfasst nur die ausgewaehlten Konfigurationen
+        E = E(ismember(E.config, opt.Configs), :);
+    end
     kpis = "K" + (1:9);
     base = opt.Baseline;
     if ~contains(base, "_"), base = base + "_default"; end
@@ -97,7 +103,9 @@ function R = analyzeBenchmark(campaign, opt)
     % ---------- Ausgabe ----------
     outDir = fullfile(campDir, 'analysis');
     if ~exist(outDir, 'dir'), mkdir(outDir); end
-    pre = @(name) fullfile(outDir, opt.Condition + "_" + name);
+    tag = opt.Condition;
+    if strlength(opt.Tag) > 0, tag = tag + "_" + opt.Tag; end
+    pre = @(name) fullfile(outDir, tag + "_" + name);
     writetable(runs, pre('runs.csv'));
     writetable(t1,   pre('table1_robustness.csv'));
     writetable(t2(:, {'config','nSuccess','K2_mean','K2_std','K4_mean','K4_std','T2_mean','T2_std'}), ...
@@ -141,6 +149,8 @@ function runs = runLevel(E, kpis)
 end
 
 function tr = trainingStats(campDir)
+% Trainingsstatistik aller Agentendateien (auch nicht ausgewaehlter, der
+% Left-Join mit den Laeufen verwirft die ueberzaehligen).
 % T1 (Streuung des Rewards in den letzten 100 Episoden) und T2 (Dauer [min]).
     files = dir(fullfile(campDir, 'agents', '*.mat'));
     tr = table(strings(0,1), zeros(0,1), zeros(0,1), zeros(0,1), ...
