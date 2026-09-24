@@ -10,7 +10,9 @@ function makeFigures(opt)
 %     boxplots   boxplot_K2/K4/K7/K9.png      Verteilung ueber die erfolgreichen Laeufe
 %     ci         ci_K2/K4/K7/K9.png           95 %-Bootstrap-Konfidenzintervalle
 %     training   trainingsverlauf_ppo_default/_optimized.png   Mittel +- Std ueber 10 Seeds
-%     circle     soll_vs_ist_kreisbahn.png, soll_vs_ist_kreisbahn_opt.png,
+%     trainall   trainingsverlauf_defaults.png   Lernkurven aller sechs Default-Agenten,
+%                erfolgreiche und gescheiterte Laeufe getrennt eingefaerbt
+%     circle    soll_vs_ist_kreisbahn.png, soll_vs_ist_kreisbahn_opt.png,
 %                basis_orientaion_ppo.png, basis_orientation_ppo_optimized.png
 %     twoseg     rampe_1.png, rampe_opt_1.png, basis_ori_1.png, basis_ori_opt_1.png
 %     momentum   impulserhaltung_scope.png    Gesamtimpuls waehrend einer Episode
@@ -22,7 +24,7 @@ function makeFigures(opt)
 
     arguments
         opt.OutDir  (1,1) string = "C:\Users\Deermste\Documents\FraUas\Mechatronikprojekt\Paper\space-robot-simulation-using-formal-methods\Figures"
-        opt.Only    (1,:) string = ["boxplots","ci","training","circle","twoseg","momentum"]
+        opt.Only    (1,:) string = ["boxplots","ci","training","trainall","circle","twoseg","momentum"]
         opt.OutRoot (1,1) string = string(fullfile(fileparts(fileparts(fileparts(mfilename('fullpath')))), 'results'))
     end
 
@@ -35,6 +37,7 @@ function makeFigures(opt)
     if any(opt.Only == "boxplots"), figBoxplots(R.runs, opt.OutDir); end
     if any(opt.Only == "ci"),       figCI(R.runs, opt.OutDir);       end
     if any(opt.Only == "training"), figTraining(opt.OutRoot, opt.OutDir); end
+    if any(opt.Only == "trainall"), figTrainingAll(R.runs, opt.OutRoot, opt.OutDir); end
 
     if any(ismember(["circle","twoseg","momentum"], opt.Only))
         sel  = pickSeeds(R.runs,  ["PPO_default","PPO_optimized","TRPO_default"]);
@@ -151,6 +154,52 @@ function figTraining(outRoot, outDir)
         name = "trainingsverlauf_ppo_" + extractAfter(c, "PPO_") + ".png";
         save1(f, fullfile(outDir, name));
     end
+end
+
+function figTrainingAll(runs, outRoot, outDir)
+% Lernkurven der sechs Default-Agenten als kleine Vielfache mit gleicher
+% y-Achse. Jede Linie ist ein Seed (gleitender Mittelwert ueber 25 Episoden),
+% blau erfolgreiche, orange gescheiterte Laeufe, schwarz das Mittel ueber alle
+% zehn Seeds. Reihenfolge wie in den Tabellen des Papers.
+    configs = ["TRPO_default","SAC_default","TD3_default","DDPG_default","PPO_default","PG_default"];
+    cOk   = [0.184 0.427 0.710];      % #2F6DB5
+    cFail = [0.784 0.439 0.118];      % #C8701E
+    Xs = cell(size(configs)); ok = Xs;
+    for j = 1:numel(configs)
+        files = dir(fullfile(outRoot, 'benchmark_v2', 'agents', configs(j) + "_s*.mat"));
+        for i = 1:numel(files)
+            L = load(fullfile(files(i).folder, files(i).name), 'stats', 'seed');
+            Xs{j}(:, i) = movmean(L.stats.EpisodeReward, 25);
+            ok{j}(i) = runs.success(runs.config == configs(j) & runs.seed == L.seed);
+        end
+    end
+    yLo = floor(min(cellfun(@(X) min(X, [], 'all'), Xs)) / 10) * 10;
+
+    f = figure('Visible', 'off', 'Units', 'centimeters', 'Position', [2 2 18 9], 'Color', 'w');
+    t = tiledlayout(f, 2, 3, 'TileSpacing', 'compact', 'Padding', 'compact');
+    for j = 1:numel(configs)
+        ax = nexttile(t);
+        hold(ax, 'on');
+        X = Xs{j}; ep = (1:size(X,1))';
+        [hF, hS] = deal(gobjects(0));
+        if any(~ok{j}), hF = plot(ax, ep, X(:, ~ok{j}), 'Color', [cFail 0.6], 'LineWidth', 0.5); end
+        if any(ok{j}),  hS = plot(ax, ep, X(:,  ok{j}), 'Color', [cOk 0.6],   'LineWidth', 0.5); end
+        hM = plot(ax, ep, mean(X, 2), 'Color', [0.1 0.1 0.1], 'LineWidth', 1.3);
+        ylim(ax, [yLo, 0]); xlim(ax, [1, size(X,1)]);
+        grid(ax, 'on'); box(ax, 'on');
+        title(ax, sprintf('%s (%d/%d successful)', extractBefore(configs(j), "_"), ...
+            nnz(ok{j}), numel(ok{j})), 'FontWeight', 'normal');
+        if ~isempty(hS) && ~isempty(hF)
+            hLeg = [hM, hS(1), hF(1)];      % Handles fuer die gemeinsame Legende
+        end
+    end
+    % Eine Legende unter allen Feldern, damit sie keine Kurven verdeckt
+    lg = legend(hLeg, {'mean over 10 seeds', 'successful run', 'failed run'}, ...
+        'Orientation', 'horizontal', 'FontSize', 8);
+    lg.Layout.Tile = 'south';
+    xlabel(t, 'Episode', 'FontSize', 9);
+    ylabel(t, 'Episode reward (moving average, 25)', 'FontSize', 9);
+    save1(f, fullfile(outDir, 'trainingsverlauf_defaults.png'));
 end
 
 % ============================ Einzelne Episoden =============================
